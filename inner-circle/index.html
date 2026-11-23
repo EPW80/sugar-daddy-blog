@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inner Circle — Sugar Daddy</title>
+  <meta name="description" content="Training, bloodwork, sleep, mental health and grooming for men who take care of themselves.">
+  <link rel="preload" href="/node_modules/@fontsource/playfair-display/files/playfair-display-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/node_modules/@fontsource/barlow/files/barlow-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/src/fonts.css">
+  <link rel="stylesheet" href="/tokens/tokens.css">
+  <link rel="stylesheet" href="/src/styles.css">
+</head>
+<body data-page="signup">
+  <a class="sd-skip" href="#sd-signup">Skip to sign-up</a>
+  <header class="sd-signup-header sd-pin"><a class="sd-link" href="/">Sugar Daddy · Home</a></header>
+  <noscript><p class="sd-noscript">Enable JavaScript to use this sign-up form.</p><style>.sd-form { display: none; }</style></noscript>
+  <main class="sd-signup-page sd-pin" id="sd-signup" tabindex="-1" aria-labelledby="sd-signup-title">
+
+    <div class="sd-modal__panel sd-pin" aria-labelledby="sd-signup-title" aria-describedby="sd-signup-desc">
+      <div class="sd-modal__art" aria-hidden="true">
+        <img src="/assets/sd-hero.svg" alt="">
+        <span class="sd-modal__frame"></span>
+        <span class="sd-crest sd-crest--lg"><span class="sd-foil-text">SD</span><small>Est. MMXXVI</small></span>
+      </div>
+      <div class="sd-modal__body">
+        <a class="sd-modal__close" href="/" aria-label="Back to Sugar Daddy">×</a>
+
+        <div class="sd-modal__view" data-view="form">
+          <p class="sd-eyebrow"><span aria-hidden="true">◆</span> Members only</p>
+          <h1 id="sd-signup-title" class="sd-modal__title">Join the <em class="sd-foil-text">Inner Circle</em></h1>
+          <p id="sd-signup-desc" class="sd-modal__lede">One private letter every Sunday: the training, bloodwork, sleep and grooming notes actually worth your time.</p>
+          <ul class="sd-perks">
+            <li>Members-only issues and long reads</li>
+            <li>First look at the Ask Daddy desk</li>
+            <li>No spam. Leave in one click.</li>
+          </ul>
+          <form class="sd-form" method="post" action="/inner-circle/" novalidate>
+            <p class="sd-signup-status" data-signup-status role="status">Sign-up is still loading. If it doesn’t become available, reload this page.</p>
+            <fieldset disabled>
+              <label for="sd-signup-email">Email address</label>
+              <div class="sd-form__row">
+                <input id="sd-signup-email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" maxlength="254" placeholder="you@example.com" aria-describedby="sd-signup-error" required>
+                <button type="submit" class="sd-btn sd-btn--foil sd-form__submit">Request entry</button>
+              </div>
+            </fieldset>
+            <p id="sd-signup-error" class="sd-form__error" role="alert" aria-live="assertive"></p>
+          </form>
+          <div class="sd-modal__foot">
+            <span>Unsubscribe anytime.</span>
+            <a class="sd-textbtn" href="/">Not now</a>
+          </div>
+        </div>
+
+        <div class="sd-modal__view" data-view="success" hidden>
+          <h1 id="sd-signup-success-title" class="sd-modal__title" tabindex="-1" data-success-title>Check your inbox</h1>
+          <p id="sd-signup-success-desc" class="sd-modal__lede"><span data-success-live>If your address still needs confirmation, look for a link in your inbox or spam folder. Once confirmed, you’ll receive the Sunday letter.</span><span data-success-demo hidden>This was a demo. No email was sent and you haven’t been subscribed.</span></p>
+          <a class="sd-btn sd-btn--foil" href="/">Back to home</a>
+          <button type="button" class="sd-textbtn" data-signup-change-email>Use a different email</button>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer class="sd-footer sd-pin">
+    <nav aria-label="Footer">
+      <a href="/">Home</a>
+      <a href="/inner-circle/" data-sd-signup-open>Inner Circle newsletter</a>
+    </nav>
+    <p>Content is for information only and is not medical advice. Talk to your doctor.</p>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

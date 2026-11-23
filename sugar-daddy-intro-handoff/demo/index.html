@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sugar Daddy — intro demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Barlow:wght@300;400&family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet">
+  <style>
+    /* Stand-in page only, so the reveal has something to land on. Not part of the handoff. */
+    *,*::before,*::after{box-sizing:border-box}
+    body{margin:0;background:#1c070b;color:#f2ece4;font:300 18px/1.7 Barlow,system-ui,sans-serif}
+    .demo{min-height:100vh;display:flex;flex-direction:column;background-color:#1c070b;background-image:repeating-linear-gradient(90deg,rgba(226,181,130,.045) 0 1px,transparent 1px 18px)}
+    .demo-head{text-align:center;padding:34px 20px 26px;border-bottom:1px solid rgba(226,181,130,.18)}
+    .demo-word{font:500 clamp(24px,3.3vw,42px)/1 "Playfair Display",Georgia,serif;letter-spacing:.2em;padding-left:.2em}
+    .demo-tag{margin-top:12px;font:italic 500 16px/1.1 "Playfair Display",Georgia,serif;color:#e2b582}
+    .demo-hero{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;padding:clamp(40px,7vw,96px)}
+    .demo-hero h1{margin:0;font:400 clamp(40px,5vw,64px)/1.04 "Playfair Display",Georgia,serif;max-width:14ch}
+    .demo-hero h1 em{color:#e2b582}
+    .demo-hero p{color:rgba(242,236,228,.78);max-width:420px}
+    .demo-hero img{width:100%;aspect-ratio:16/10;object-fit:cover;outline:1px solid rgba(226,181,130,.55);outline-offset:-14px}
+    .demo-replay{display:inline-block;margin-top:24px;padding:14px 22px;border:1px solid rgba(226,181,130,.55);color:#f3dcae;text-decoration:none;font:600 12px/1 "Barlow Condensed",sans-serif;letter-spacing:.24em;text-transform:uppercase}
+    .demo-replay:focus-visible{outline:2px solid #f3dcae;outline-offset:3px}
+    @media (max-width:767px){.demo-hero{grid-template-columns:1fr}.demo-word{letter-spacing:.14em;padding-left:.14em}}
+  </style>
+  <!-- Sugar Daddy site intro: paste at the END of <head>, after your stylesheets.
+       Decides before first paint whether the intro plays, so nobody sees a flash.
+       QA: ?sd_intro=1 forces the intro, ?sd_intro=0 disables it. -->
+  <link rel="stylesheet" href="../src/intro.css">
+  <script>
+    (function () {
+      var q = new URLSearchParams(location.search).get('sd_intro'), seen = false;
+      try { seen = sessionStorage.getItem('sd_intro_seen') === '1'; sessionStorage.setItem('sd_intro_seen', '1'); } catch (e) {}
+      var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var play = q === '1' || (q !== '0' && !seen && !reduce);
+      document.documentElement.classList.add(play ? 'sd-intro-playing' : 'sd-intro-off');
+    })();
+  </script>
+  <style>
+    .sd-intro-off .sdi { display: none }
+    .sd-intro-off .sdi-page { animation: none }
+    .sd-intro-playing, .sd-intro-playing body { overflow: hidden }
+    .sd-intro-playing body { background: #1c070b } /* dark behind the opening doors */
+  </style>
+</head>
+<body>
+  <!-- Sugar Daddy site intro: paste as the FIRST child of <body>. Requires intro.css + intro.js. -->
+  <div class="sdi sdi--fixed" id="sd-intro">
+    <div class="sdi-half sdi-top" aria-hidden="true"></div>
+    <div class="sdi-half sdi-bot" aria-hidden="true"></div>
+    <div class="sdi-stage" aria-hidden="true">
+    <div class="sdi-glow"></div>
+    <svg class="sdi-ecg" viewBox="0 0 1280 240" preserveAspectRatio="none"><defs><linearGradient id="sdi-pulse-grad" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#c9844b" stop-opacity="0"></stop><stop offset=".3" stop-color="#c9844b"></stop><stop offset=".5" stop-color="#f3dcae"></stop><stop offset=".7" stop-color="#c9844b"></stop><stop offset="1" stop-color="#c9844b" stop-opacity="0"></stop></linearGradient></defs><path pathLength="1" d="M0 120 H556 L580 120 L596 84 L616 166 L640 28 L664 212 L684 100 L700 120 H1280"></path></svg>
+    <div class="sdi-crest"><svg viewBox="0 0 150 150"><circle class="sdi-disc" cx="75" cy="75" r="74"></circle><circle class="sdi-ring" pathLength="1" cx="75" cy="75" r="74"></circle><circle class="sdi-ring2" cx="75" cy="75" r="66"></circle></svg><span class="sdi-mono"><span class="sdi-foil">SD</span></span><span class="sdi-est">Est. MMXXVI</span></div>
+    <div class="sdi-word"><span class="sdi-l" style="animation-delay:2.10s">S</span><span class="sdi-l" style="animation-delay:2.14s">U</span><span class="sdi-l" style="animation-delay:2.18s">G</span><span class="sdi-l" style="animation-delay:2.22s">A</span><span class="sdi-l" style="animation-delay:2.26s">R</span><span class="sdi-l" style="animation-delay:2.30s">D</span><span class="sdi-l" style="animation-delay:2.34s">A</span><span class="sdi-l" style="animation-delay:2.38s">D</span><span class="sdi-l" style="animation-delay:2.42s">D</span><span class="sdi-l" style="animation-delay:2.46s">Y</span><span class="sdi-l sdi-foil" style="animation-delay:2.56s">.</span></div>
+    <div class="sdi-tag"><i></i><span class="sdi-foil">Take care of yourself</span><i></i></div>
+    </div>
+    <div class="sdi-seam" aria-hidden="true"></div>
+    <button type="button" class="sdi-skip">Skip intro</button>
+  </div>
+
+  <div class="sdi-page">
+    <main class="demo">
+      <header class="demo-head">
+        <div class="demo-word">SUGARDADDY<span style="color:#e2b582">.</span></div>
+        <div class="demo-tag">Take care of yourself</div>
+      </header>
+      <section class="demo-hero">
+        <div>
+          <h1>A little more discipline. <em>A lot less guesswork.</em></h1>
+          <p>Stand-in page for the intro demo. In production, the real homepage sits here.</p>
+          <a class="demo-replay" href="?sd_intro=1">↻ Replay intro</a>
+        </div>
+        <img src="assets/sd-hero.svg" alt="" width="1600" height="1000">
+      </section>
+    </main>
+  </div>
+
+  <script src="../src/intro.js"></script>
+  <script>
+    // Example: start anything else that shouldn't overlap the intro (pop-ups, chat widgets) here.
+    SDIntro.done.then(function () { console.log('[SDIntro] done, playing =', SDIntro.playing); });
+  </script>
+</body>
+</html>

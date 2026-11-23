@@ -1,0 +1,105 @@
+/* Sugar Daddy — design tokens
+   Source of truth for the reference implementation. Mirror of tokens.json. */
+:root {
+  /* ── Color: dark grounds ───────────────────────────── */
+  --sd-color-ink-900: #0e0406;      /* announcement bar, creed band */
+  --sd-color-ink-800: #140709;      /* modal, 1c page, button text on foil */
+  --sd-color-wine-800: #1c070b;     /* 1a header + hero */
+  --sd-color-wine-600: #3d1018;     /* artwork highlight only */
+
+  /* ── Color: light grounds ──────────────────────────── */
+  --sd-color-bone-100: #f3ede3;     /* light sections */
+  --sd-color-bone-200: #ebe2d6;     /* row hover on bone */
+
+  /* ── Color: metal accents ──────────────────────────── */
+  --sd-color-copper-500: #c9844b;   /* accents on dark */
+  --sd-color-copper-700: #8e4a1f;   /* accent TEXT on bone (5.73:1) */
+  --sd-color-brass-300: #e2b582;    /* eyebrows, labels on dark */
+  --sd-color-champagne-200: #f3dcae;/* links + hover on dark */
+
+  /* ── Color: text ───────────────────────────────────── */
+  --sd-color-text-on-dark: #f2ece4;
+  --sd-color-text-on-dark-muted: rgba(242, 236, 228, .78);  /* body copy */
+  --sd-color-text-on-dark-subtle: rgba(242, 236, 228, .62); /* meta, captions */
+  --sd-color-text-on-light: #1e0c10;
+  --sd-color-text-on-light-muted: rgba(30, 12, 16, .76);
+  --sd-color-text-on-light-subtle: rgba(30, 12, 16, .62);
+  --sd-color-error-on-dark: #f0a37a;
+
+  /* ── Color: lines ──────────────────────────────────── */
+  --sd-line-gold-strong: rgba(226, 181, 130, .55); /* image inset frames, ghost button */
+  --sd-line-gold: rgba(226, 181, 130, .40);        /* modal border, close button */
+  --sd-line-gold-faint: rgba(226, 181, 130, .18);  /* section dividers on dark */
+  --sd-line-dark-on-light: rgba(30, 12, 16, .16);  /* index rows on bone */
+  --sd-line-double-on-light: rgba(30, 12, 16, .55);/* 3px double section rule */
+
+  /* ── Gradients / textures ──────────────────────────── */
+  --sd-gradient-foil: linear-gradient(135deg, #b77a40 0%, #ebc994 40%, #c58c52 58%, #f3dcae 80%, #b77a40 100%);
+  --sd-gradient-foil-text: linear-gradient(135deg, #c58c52 0%, #f3dcae 42%, #c9844b 68%, #ebc994 100%);
+  --sd-texture-pinstripe: repeating-linear-gradient(90deg, rgba(226, 181, 130, .045) 0 1px, transparent 1px 18px);
+  --sd-scrim-modal: rgba(10, 3, 5, .72);
+
+  /* ── Typography: families ──────────────────────────── */
+  --sd-font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --sd-font-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sd-font-label: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+
+  /* ── Typography: scale (desktop; fluid via clamp) ──── */
+  --sd-text-masthead: clamp(56px, 9.4vw, 120px);  /* 1b masthead */
+  --sd-text-display: clamp(44px, 5.9vw, 76px);    /* 1c hero */
+  --sd-text-h1: clamp(40px, 5vw, 64px);           /* 1a hero */
+  --sd-text-h2: clamp(32px, 3.4vw, 44px);
+  --sd-text-quote: clamp(26px, 3vw, 38px);
+  --sd-text-h3: 25px;                             /* card titles */
+  --sd-text-body-l: 18px;
+  --sd-text-body: 16px;
+  --sd-text-body-s: 14px;
+  --sd-text-caption: 12px;
+  --sd-text-label: 12px;     /* Barlow Condensed 600, uppercase */
+  --sd-text-label-s: 11px;
+
+  --sd-weight-light: 300;
+  --sd-weight-regular: 400;
+  --sd-weight-medium: 500;
+  --sd-weight-semibold: 600;
+
+  --sd-leading-tight: 1.04;
+  --sd-leading-heading: 1.1;
+  --sd-leading-body: 1.65;
+
+  --sd-tracking-label: .24em;
+  --sd-tracking-label-wide: .34em;
+  --sd-tracking-wordmark: .2em;
+
+  /* ── Spacing (4px base) ────────────────────────────── */
+  --sd-space-1: 4px;
+  --sd-space-2: 8px;
+  --sd-space-3: 12px;
+  --sd-space-4: 16px;
+  --sd-space-5: 24px;
+  --sd-space-6: 32px;
+  --sd-space-7: 44px;
+  --sd-space-8: 56px;
+  --sd-space-9: 64px;
+  --sd-space-10: 96px;
+  --sd-section-y: clamp(64px, 8vw, 104px);
+  --sd-gutter: clamp(20px, 7.5vw, 96px);
+  --sd-content-max: 1280px;
+
+  /* ── Shape & elevation ─────────────────────────────── */
+  --sd-radius: 0;                 /* square everywhere; crest is the only circle */
+  --sd-frame-inset: -10px;        /* outline-offset for image hairline frames */
+  --sd-shadow-card: 0 18px 40px rgba(30, 12, 16, .18);
+  --sd-shadow-cta: 0 10px 30px rgba(183, 122, 64, .25);
+  --sd-shadow-modal: 0 40px 120px rgba(0, 0, 0, .6);
+
+  /* ── Motion ────────────────────────────────────────── */
+  --sd-ease-out: cubic-bezier(.2, .7, .2, 1);
+  --sd-duration-fast: 160ms;   /* hover color */
+  --sd-duration-base: 240ms;   /* scrim fade */
+  --sd-duration-slow: 320ms;   /* modal panel enter */
+
+  /* ── Layers ────────────────────────────────────────── */
+  --sd-z-header: 10;
+  --sd-z-modal: 100;
+}

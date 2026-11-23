@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sugar Daddy — Men's health &amp; wellness</title>
+  <meta name="description" content="Training, bloodwork, sleep, mental health and grooming for men who take care of themselves.">
+  <link rel="preload" href="/node_modules/@fontsource/playfair-display/files/playfair-display-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/node_modules/@fontsource/barlow/files/barlow-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/src/fonts.css">
+  <link rel="stylesheet" href="/tokens/tokens.css">
+  <link rel="stylesheet" href="/src/styles.css">
+  <link rel="stylesheet" href="/src/intro.css">
+  <script>
+    // Keep playback and its watchdog independent of the application bundle.
+    (() => {
+      const html = document.documentElement;
+      const motion = matchMedia('(prefers-reduced-motion: reduce)');
+      const override = new URLSearchParams(location.search).get('sd_intro');
+      let seen = false;
+      try { seen = sessionStorage.getItem('sd_intro_seen') === '1'; } catch { /* Storage can be blocked. */ }
+      const play = !motion.matches && (override === '1' || (override !== '0' && !seen && !location.hash));
+      const listeners = new AbortController();
+      const options = { signal: listeners.signal };
+      const overlay = () => document.getElementById('sd-intro');
+      let resolveDone;
+      let finished = false;
+      let watchdog;
+      let skipTimer;
+      let skipping = false;
+      const done = new Promise(resolve => { resolveDone = resolve; });
+
+      function finish(natural = false) {
+        if (finished) return;
+        finished = true;
+        const root = overlay();
+        const moveFocus = skipping || root?.contains(document.activeElement);
+        clearTimeout(watchdog);
+        clearTimeout(skipTimer);
+        listeners.abort();
+        root?.remove();
+        html.classList.remove('sd-intro-playing');
+        // The page's ease continues for 150ms after the doors clear the viewport.
+        if (natural) setTimeout(() => html.classList.remove('sd-intro-reveal'), 150);
+        else html.classList.remove('sd-intro-reveal');
+        const page = document.getElementById('sd-intro-page');
+        if (page && play) page.inert = false;
+        if (moveFocus) document.getElementById('main')?.focus({ preventScroll: true });
+        resolveDone();
+        document.dispatchEvent(new Event('sd:intro-done'));
+      }
+
+      function skip() {
+        const root = overlay();
+        if (!play || finished || skipping || !root) return;
+        skipping = true;
+        root.classList.add('is-skipped');
+        html.classList.remove('sd-intro-reveal');
+        skipTimer = setTimeout(finish, 300);
+      }
+
+      window.SDIntro = { get playing() { return play && !finished; }, done, skip };
+      if (!play) {
+        // Resolve immediately. Once parsed, discard the already-hidden markup.
+        finish();
+        document.addEventListener('DOMContentLoaded', () => overlay()?.remove(), { once: true });
+        return;
+      }
+
+      watchdog = setTimeout(finish, 4600);
+      html.classList.add('sd-intro-playing', 'sd-intro-reveal');
+      document.addEventListener('animationstart', event => {
+        if (event.target !== overlay() || event.animationName !== 'sdi-done') return;
+        // Stylesheets can arrive after the bootstrap on a cold load.
+        clearTimeout(watchdog);
+        watchdog = setTimeout(finish, 4600);
+        try { sessionStorage.setItem('sd_intro_seen', '1'); } catch { /* Playback still works. */ }
+      }, options);
+      document.addEventListener('animationend', event => {
+        if (event.target === overlay() && event.animationName === 'sdi-done') finish(true);
+      }, options);
+      document.addEventListener('click', event => {
+        if (event.target.closest('.sdi-skip')) skip();
+      }, options);
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          skip();
+        }
+      }, options);
+      motion.addEventListener('change', event => { if (event.matches) finish(); }, options);
+      window.addEventListener('pagehide', () => finish(), options);
+    })();
+  </script>
+</head>
+<body>
+  <div class="sdi" id="sd-intro" hidden>
+    <div class="sdi-half sdi-top" aria-hidden="true"></div>
+    <div class="sdi-half sdi-bot" aria-hidden="true"></div>
+    <div class="sdi-stage" aria-hidden="true">
+      <div class="sdi-glow"></div>
+      <svg class="sdi-ecg" viewBox="0 0 1280 240" preserveAspectRatio="none"><defs><linearGradient id="sdi-pulse-grad" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#c9844b" stop-opacity="0"></stop><stop offset=".3" stop-color="#c9844b"></stop><stop offset=".5" stop-color="#f3dcae"></stop><stop offset=".7" stop-color="#c9844b"></stop><stop offset="1" stop-color="#c9844b" stop-opacity="0"></stop></linearGradient></defs><path pathLength="1" d="M0 120 H556 L580 120 L596 84 L616 166 L640 28 L664 212 L684 100 L700 120 H1280"></path></svg>
+      <div class="sdi-crest"><svg viewBox="0 0 150 150"><circle class="sdi-disc" cx="75" cy="75" r="74"></circle><circle class="sdi-ring" pathLength="1" cx="75" cy="75" r="74"></circle><circle class="sdi-ring2" cx="75" cy="75" r="66"></circle></svg><span class="sdi-mono"><span class="sdi-foil">SD</span></span><span class="sdi-est">Est. MMXXVI</span></div>
+      <div class="sdi-word"><span class="sdi-l" style="animation-delay:2.10s">S</span><span class="sdi-l" style="animation-delay:2.14s">U</span><span class="sdi-l" style="animation-delay:2.18s">G</span><span class="sdi-l" style="animation-delay:2.22s">A</span><span class="sdi-l" style="animation-delay:2.26s">R</span><span class="sdi-l" style="animation-delay:2.30s">D</span><span class="sdi-l" style="animation-delay:2.34s">A</span><span class="sdi-l" style="animation-delay:2.38s">D</span><span class="sdi-l" style="animation-delay:2.42s">D</span><span class="sdi-l" style="animation-delay:2.46s">Y</span><span class="sdi-l sdi-foil" style="animation-delay:2.56s">.</span></div>
+      <div class="sdi-tag"><i></i><span class="sdi-foil">Take care of yourself</span><i></i></div>
+    </div>
+    <div class="sdi-seam" aria-hidden="true"></div>
+    <button type="button" class="sdi-skip">Skip intro</button>
+  </div>
+  <div class="sdi-page" id="sd-intro-page">
+    <a class="sd-skip" href="#main">Skip to content</a>
+
+    <div class="sd-announce" id="sd-announce">
+      <span aria-hidden="true">◆</span>
+      <span class="sd-announce__text">The Inner Circle — a private letter, every Sunday</span>
+      <a href="/inner-circle/" class="sd-announce__link" data-sd-signup-open>Inner Circle newsletter</a>
+      <span class="sd-signup-availability" data-signup-availability hidden>Sign-up coming soon</span>
+    </div>
+
+    <header class="sd-header sd-pin" id="sd-header">
+      <nav class="sd-header__utility" aria-label="Utility">
+        <span class="sd-unavailable">Search <small>Coming soon</small></span>
+        <span class="sd-unavailable">Ask Daddy <small>Coming soon</small></span>
+      </nav>
+      <a class="sd-brand" href="/" aria-label="Sugar Daddy, home">
+        <span class="sd-brand__est" aria-hidden="true">Est. MMXXVI</span>
+        <span class="sd-brand__wordmark" aria-hidden="true">SUGARDADDY<span class="sd-foil-text">.</span></span>
+        <span class="sd-brand__tagline" aria-hidden="true"><span class="sd-rule"></span><span class="sd-foil-text">Take care of yourself</span><span class="sd-rule"></span></span>
+      </a>
+      <div class="sd-header__cta">
+        <a href="/inner-circle/" class="sd-btn sd-btn--ghost" data-sd-signup-open>Inner Circle newsletter</a>
+        <span class="sd-signup-availability" data-signup-availability hidden>Sign-up coming soon</span>
+      </div>
+    </header>
+
+    <nav class="sd-sectionnav sd-pin" aria-label="Sections">
+      <ul>
+        <li><a href="#sd-section-raw-sugar">Raw Sugar</a></li>
+        <li><a href="#sd-section-sugar-levels">Sugar Levels</a></li>
+        <li><a href="#sd-section-daddy-issues">Daddy Issues</a></li>
+        <li><a href="#sd-section-sweet-dreams">Sweet Dreams</a></li>
+        <li><a href="#sd-section-sugar-coat">Sugar Coat</a></li>
+      </ul>
+    </nav>
+
+    <main id="main" tabindex="-1">
+      <section class="sd-hero sd-pin" aria-labelledby="sd-hero-title">
+        <div class="sd-hero__copy">
+          <p class="sd-eyebrow"><span aria-hidden="true">◆</span> No more putting it off</p>
+          <h1 id="sd-hero-title" class="sd-hero__title">A little more discipline. <em class="sd-foil-text">A lot less guesswork.</em></h1>
+          <p class="sd-hero__lede">Lift. Sleep. Eat like an adult. Get the bloodwork. You don't need a scare to start taking care of yourself.</p>
+          <div class="sd-hero__actions">
+            <a class="sd-btn sd-btn--foil" href="#sd-catalog-title">Explore sections</a>
+            <span class="sd-unavailable">Next issue <small>Coming soon</small></span>
+          </div>
+        </div>
+        <figure class="sd-hero__art">
+          <img src="/assets/sd-hero.svg" alt="" width="1600" height="1000" fetchpriority="high">
+          <span class="sd-crest" aria-hidden="true"><span class="sd-foil-text">SD</span><small>MMXXVI</small></span>
+        </figure>
+      </section>
+
+      <section class="sd-creed sd-pin" aria-label="The Sugar Daddy creed">
+        <div class="sd-ornament" aria-hidden="true"><span></span>◆<span></span></div>
+        <blockquote>
+          <p>Health is the only luxury that <span class="sd-foil-text">compounds.</span></p>
+          <footer>The Sugar Daddy creed</footer>
+        </blockquote>
+      </section>
+
+      <section class="sd-catalog" aria-labelledby="sd-catalog-title">
+        <div class="sd-catalog__head">
+          <h2 id="sd-catalog-title" tabindex="-1">The <em>sections</em></h2>
+        </div>
+        <ul class="sd-catalog__grid">
+          <li class="sd-card" id="sd-section-raw-sugar" tabindex="-1">
+            <div class="sd-card__content">
+              <img src="/assets/sd-c1.svg" alt="" width="400" height="500" loading="lazy">
+              <span class="sd-card__num"><span>No. I</span></span>
+              <h3 class="sd-card__title">Raw Sugar</h3>
+              <span class="sd-card__tags">Fitness · Strength · Training</span>
+              <p class="sd-card__desc">Real programs and heavier lifts. Workouts built for men with jobs, kids and bad knees.</p>
+              <span class="sd-card__availability">Articles coming soon</span>
+            </div>
+          </li>
+          <li class="sd-card" id="sd-section-sugar-levels" tabindex="-1">
+            <div class="sd-card__content">
+              <img src="/assets/sd-c2.svg" alt="" width="400" height="500" loading="lazy">
+              <span class="sd-card__num"><span>No. II</span></span>
+              <h3 class="sd-card__title">Sugar Levels</h3>
+              <span class="sd-card__tags">Nutrition · Metabolism · Bloodwork</span>
+              <p class="sd-card__desc">Know your numbers. Eat like an adult. What your labs are actually telling you.</p>
+              <span class="sd-card__availability">Articles coming soon</span>
+            </div>
+          </li>
+          <li class="sd-card" id="sd-section-daddy-issues" tabindex="-1">
+            <div class="sd-card__content">
+              <img src="/assets/sd-c3.svg" alt="" width="400" height="500" loading="lazy">
+              <span class="sd-card__num"><span>No. III</span></span>
+              <h3 class="sd-card__title">Daddy Issues</h3>
+              <span class="sd-card__tags">Mental Health · Stress · Mindset</span>
+              <p class="sd-card__desc">Stress, burnout, anger, loneliness. The stuff men don’t talk about, talked about.</p>
+              <span class="sd-card__availability">Articles coming soon</span>
+            </div>
+          </li>
+          <li class="sd-card" id="sd-section-sweet-dreams" tabindex="-1">
+            <div class="sd-card__content">
+              <img src="/assets/sd-c4.svg" alt="" width="400" height="500" loading="lazy">
+              <span class="sd-card__num"><span>No. IV</span></span>
+              <h3 class="sd-card__title">Sweet Dreams</h3>
+              <span class="sd-card__tags">Sleep · Recovery · Longevity</span>
+              <p class="sd-card__desc">Better sleep, faster recovery, and the habits that keep you in the game longer.</p>
+              <span class="sd-card__availability">Articles coming soon</span>
+            </div>
+          </li>
+          <li class="sd-card" id="sd-section-sugar-coat" tabindex="-1">
+            <div class="sd-card__content">
+              <img src="/assets/sd-c5.svg" alt="" width="400" height="500" loading="lazy">
+              <span class="sd-card__num"><span>No. V</span></span>
+              <h3 class="sd-card__title">Sugar Coat</h3>
+              <span class="sd-card__tags">Grooming · Skin · Style</span>
+              <p class="sd-card__desc">Skin, hair, beard and fit. Look like you have your life together, then actually do.</p>
+              <span class="sd-card__availability">Articles coming soon</span>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="sd-footer sd-pin">
+      <nav aria-label="Footer">
+        <a href="/">Home</a>
+        <span class="sd-footer__newsletter">
+          <a href="/inner-circle/" data-sd-signup-open>Inner Circle newsletter</a>
+          <span class="sd-signup-availability" data-signup-availability hidden>Sign-up coming soon</span>
+        </span>
+      </nav>
+      <p>Content is for information only and is not medical advice. Talk to your doctor.</p>
+    </footer>
+  </div>
+  <script>
+    document.getElementById('sd-intro-page').inert =
+      document.documentElement.classList.contains('sd-intro-playing');
+  </script>
+
+  <!-- ── Inner Circle sign-up modal ─────────────────────────────── -->
+  <div class="sd-modal" id="sd-signup" hidden>
+    <div class="sd-modal__scrim" data-sd-signup-close></div>
+    <div class="sd-modal__panel sd-pin" role="dialog" aria-modal="true" aria-labelledby="sd-signup-title" aria-describedby="sd-signup-desc">
+      <div class="sd-modal__art" aria-hidden="true">
+        <img src="/assets/sd-hero.svg" alt="">
+        <span class="sd-modal__frame"></span>
+        <span class="sd-crest sd-crest--lg"><span class="sd-foil-text">SD</span><small>Est. MMXXVI</small></span>
+      </div>
+      <div class="sd-modal__body">
+        <button type="button" class="sd-modal__close" aria-label="Close sign-up" data-sd-signup-close>×</button>
+
+        <div class="sd-modal__view" data-view="form">
+          <p class="sd-eyebrow"><span aria-hidden="true">◆</span> Members only</p>
+          <h2 id="sd-signup-title" class="sd-modal__title">Join the <em class="sd-foil-text">Inner Circle</em></h2>
+          <p id="sd-signup-desc" class="sd-modal__lede">One private letter every Sunday: the training, bloodwork, sleep and grooming notes actually worth your time.</p>
+          <ul class="sd-perks">
+            <li>Members-only issues and long reads</li>
+            <li>First look at the Ask Daddy desk</li>
+            <li>No spam. Leave in one click.</li>
+          </ul>
+          <form class="sd-form" method="post" action="/inner-circle/" novalidate>
+            <p class="sd-signup-status" data-signup-status role="status">Sign-up is still loading. If it doesn’t become available, reload this page.</p>
+            <fieldset disabled>
+              <label for="sd-signup-email">Email address</label>
+              <div class="sd-form__row">
+                <input id="sd-signup-email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" maxlength="254" placeholder="you@example.com" aria-describedby="sd-signup-error" required>
+                <button type="submit" class="sd-btn sd-btn--foil sd-form__submit">Request entry</button>
+              </div>
+            </fieldset>
+            <p id="sd-signup-error" class="sd-form__error" role="alert" aria-live="assertive"></p>
+          </form>
+          <div class="sd-modal__foot">
+            <span>Unsubscribe anytime.</span>
+            <button type="button" class="sd-textbtn" data-sd-signup-close>Not now</button>
+          </div>
+        </div>
+
+        <div class="sd-modal__view" data-view="success" hidden>
+          <h2 id="sd-signup-success-title" class="sd-modal__title" tabindex="-1" data-success-title>Check your inbox</h2>
+          <p id="sd-signup-success-desc" class="sd-modal__lede"><span data-success-live>If your address still needs confirmation, look for a link in your inbox or spam folder. Once confirmed, you’ll receive the Sunday letter.</span><span data-success-demo hidden>This was a demo. No email was sent and you haven’t been subscribed.</span></p>
+          <button type="button" class="sd-btn sd-btn--foil" data-sd-signup-close>Back to home</button>
+          <button type="button" class="sd-textbtn" data-signup-change-email>Use a different email</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<!-- Sugar Daddy site intro: paste at the END of <head>, after your stylesheets.
+     Decides before first paint whether the intro plays, so nobody sees a flash.
+     QA: ?sd_intro=1 forces the intro, ?sd_intro=0 disables it. -->
+<link rel="stylesheet" href="intro.css">
+<script>
+  (function () {
+    var q = new URLSearchParams(location.search).get('sd_intro'), seen = false;
+    try { seen = sessionStorage.getItem('sd_intro_seen') === '1'; sessionStorage.setItem('sd_intro_seen', '1'); } catch (e) {}
+    var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var play = q === '1' || (q !== '0' && !seen && !reduce);
+    document.documentElement.classList.add(play ? 'sd-intro-playing' : 'sd-intro-off');
+  })();
+</script>
+<style>
+  .sd-intro-off .sdi { display: none }
+  .sd-intro-off .sdi-page { animation: none }
+  .sd-intro-playing, .sd-intro-playing body { overflow: hidden }
+  .sd-intro-playing body { background: #1c070b } /* dark behind the opening doors */
+</style>
