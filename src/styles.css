@@ -115,7 +115,9 @@ body.sd-scroll-lock { overflow: hidden; }
   border-top: 1px solid var(--sd-line-gold-faint); border-bottom: 1px solid var(--sd-line-gold-faint);
 }
 .sd-sectionnav ul {
-  display: flex; justify-content: flex-start; justify-content: safe center;
+  display: flex; justify-content: flex-start;
+  /* biome-ignore lint/suspicious/noDuplicateProperties: flex-start is the fallback for browsers without `safe` alignment */
+  justify-content: safe center;
   gap: 32px; margin: 0; padding: 5px var(--sd-gutter);
   list-style: none; overflow-x: auto;
 }
@@ -341,6 +343,7 @@ body.sd-scroll-lock { overflow: hidden; }
   min-height: calc(100dvh - 92px); display: grid; place-items: center;
   padding: var(--sd-space-8) var(--sd-gutter); background-color: var(--sd-color-wine-800);
 }
+/* biome-ignore lint/style/noDescendingSpecificity: standalone page only; never combined with .sd-modal.is-open */
 .sd-signup-page .sd-modal__panel { opacity: 1; transform: none; max-height: none; }
 .sd-noscript { padding: var(--sd-space-5) var(--sd-gutter); margin: 0; }
 @media (min-width: 1441px) {

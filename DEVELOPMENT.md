@@ -24,7 +24,9 @@ set `VITE_SIGNUP_ENDPOINT` instead. A configured endpoint takes precedence over 
 
 ```sh
 npx playwright install chromium webkit  # once per environment
-npm run check                          # fresh build + Chromium suite + WebKit smoke flows
+npm run lint                           # Biome lint + format check (no writes)
+npm run format                         # apply Biome formatting and safe lint fixes
+npm run check                          # lint, then fresh build + Chromium suite + WebKit smoke flows
 npm test -- --project=chromium          # Chromium only; still builds fresh output
 npm run test:ui                         # interactive runner; also uses a fresh build
 npm run build                          # deployment output in dist/

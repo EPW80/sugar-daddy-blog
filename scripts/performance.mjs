@@ -115,7 +115,7 @@ try {
     console.log(JSON.stringify(report.pages.at(-1)));
     await context.close();
   }
-  await writeFile(resolve(artifacts, 'report.json'), JSON.stringify(report, null, 2) + '\n');
+  await writeFile(resolve(artifacts, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
 } finally {
   await browser?.close();
   await new Promise((resolveClose, reject) => server.httpServer.close(error => error ? reject(error) : resolveClose()));
