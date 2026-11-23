@@ -14,7 +14,11 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'webkit-smoke', testMatch: ['**/flows.spec.js', '**/intro.spec.js'], use: { ...devices['Desktop Safari'] } },
+    {
+      name: 'webkit-smoke',
+      testMatch: ['**/flows.spec.js', '**/intro.spec.js'],
+      use: { ...devices['Desktop Safari'] },
+    },
   ],
   webServer: {
     command: 'npm run build && npm run preview -- --port 4173 --strictPort',

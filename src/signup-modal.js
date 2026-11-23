@@ -2,7 +2,8 @@ const STORAGE_KEY = 'sd_signup_v1';
 // Per-tab "this visit" marker, so a reload doesn't re-show a popup the reader already saw.
 const SESSION_KEY = 'sd_signup_session_v1';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-const FOCUSABLE = 'a[href],button:not(:disabled),input:not(:disabled),[tabindex]:not([tabindex="-1"])';
+const FOCUSABLE =
+  'a[href],button:not(:disabled),input:not(:disabled),[tabindex]:not([tabindex="-1"])';
 const messages = {
   empty: 'Enter your email address to join.',
   invalid: 'That email doesn’t look right. Check it and try again.',
@@ -16,16 +17,28 @@ const messages = {
 
 function demoDelay(signal) {
   return new Promise((resolve, reject) => {
-    const onAbort = () => { clearTimeout(timer); reject(new DOMException('Canceled', 'AbortError')); };
-    const timer = setTimeout(() => { signal.removeEventListener('abort', onAbort); resolve(); }, 700);
+    const onAbort = () => {
+      clearTimeout(timer);
+      reject(new DOMException('Canceled', 'AbortError'));
+    };
+    const timer = setTimeout(() => {
+      signal.removeEventListener('abort', onAbort);
+      resolve();
+    }, 700);
     signal.addEventListener('abort', onAbort, { once: true });
   });
 }
 
 export function initSignup(options = {}, intro) {
   const cfg = {
-    root: '#sd-signup', endpoint: null, scrollRatio: 0.4,
-    suppressDays: 14, source: 'homepage-popup', standalone: false, demo: false, onEvent: null,
+    root: '#sd-signup',
+    endpoint: null,
+    scrollRatio: 0.4,
+    suppressDays: 14,
+    source: 'homepage-popup',
+    standalone: false,
+    demo: false,
+    onEvent: null,
     ...options,
   };
   const root = document.querySelector(cfg.root);
@@ -66,19 +79,27 @@ export function initSignup(options = {}, intro) {
       const state = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
       if (patch) localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, ...patch }));
       return state;
-    } catch { return {}; }
+    } catch {
+      return {};
+    }
   }
 
   function seenThisVisit(mark) {
     try {
       if (mark) sessionStorage.setItem(SESSION_KEY, '1');
       return sessionStorage.getItem(SESSION_KEY) === '1';
-    } catch { return false; }
+    } catch {
+      return false;
+    }
   }
 
   function track(name, props = {}) {
     // Analytics must never prevent signup or break focus management.
-    try { cfg.onEvent?.(name, props); } catch { /* Optional integration. */ }
+    try {
+      cfg.onEvent?.(name, props);
+    } catch {
+      /* Optional integration. */
+    }
   }
 
   function setError(message = '', invalid = false) {
@@ -97,10 +118,18 @@ export function initSignup(options = {}, intro) {
 
   function showSuccess(value) {
     success = value;
-    views.forEach(view => { view.hidden = view.dataset.view !== (value ? 'success' : 'form'); });
+    views.forEach((view) => {
+      view.hidden = view.dataset.view !== (value ? 'success' : 'form');
+    });
     const labelledElement = cfg.standalone ? root : panel;
-    labelledElement.setAttribute('aria-labelledby', value ? 'sd-signup-success-title' : 'sd-signup-title');
-    labelledElement.setAttribute('aria-describedby', value ? 'sd-signup-success-desc' : 'sd-signup-desc');
+    labelledElement.setAttribute(
+      'aria-labelledby',
+      value ? 'sd-signup-success-title' : 'sd-signup-title',
+    );
+    labelledElement.setAttribute(
+      'aria-describedby',
+      value ? 'sd-signup-success-desc' : 'sd-signup-desc',
+    );
   }
 
   function resetForm() {
@@ -150,7 +179,12 @@ export function initSignup(options = {}, intro) {
     animationFrame = requestAnimationFrame(() => {
       if (!isOpen) return;
       root.classList.add('is-open');
-      (success ? successTitle : trigger && available ? input : root.querySelector('.sd-modal__close')).focus({ preventScroll: true });
+      (success
+        ? successTitle
+        : trigger && available
+          ? input
+          : root.querySelector('.sd-modal__close')
+      ).focus({ preventScroll: true });
     });
     track('signup_modal_open', { trigger: trigger ? 'click' : 'auto' });
   }
@@ -162,27 +196,41 @@ export function initSignup(options = {}, intro) {
     cancelAnimationFrame(animationFrame);
     if (!storage().subscribedAt) storage({ dismissedAt: Date.now() });
     root.classList.remove('is-open');
-    closeTimer = setTimeout(() => {
-      root.hidden = true;
-      unlockBackground();
-      if (lastFocus?.isConnected) lastFocus.focus({ preventScroll: true });
-    }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 320);
+    closeTimer = setTimeout(
+      () => {
+        root.hidden = true;
+        unlockBackground();
+        if (lastFocus?.isConnected) lastFocus.focus({ preventScroll: true });
+      },
+      matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 320,
+    );
     track('signup_modal_close', { reason });
   }
 
   function onKey(event) {
     if (!isOpen) return;
-    if (event.key === 'Escape') { event.preventDefault(); close('escape'); return; }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      close('escape');
+      return;
+    }
     if (event.key !== 'Tab') return;
-    const items = [...panel.querySelectorAll(FOCUSABLE)].filter(element => element.getClientRects().length);
+    const items = [...panel.querySelectorAll(FOCUSABLE)].filter(
+      (element) => element.getClientRects().length,
+    );
     const first = items[0];
     const last = items.at(-1);
-    if (!first) { event.preventDefault(); return; }
+    if (!first) {
+      event.preventDefault();
+      return;
+    }
     const active = document.activeElement;
     if (event.shiftKey && (active === first || !items.includes(active))) {
-      event.preventDefault(); last.focus();
+      event.preventDefault();
+      last.focus();
     } else if (!event.shiftKey && (active === last || !items.includes(active))) {
-      event.preventDefault(); first.focus();
+      event.preventDefault();
+      first.focus();
     }
   }
 
@@ -196,13 +244,19 @@ export function initSignup(options = {}, intro) {
       return;
     }
     setError();
-    if (navigator.onLine === false) { setError(messages.offline); return; }
+    if (navigator.onLine === false) {
+      setError(messages.offline);
+      return;
+    }
     setLoading(true);
     request = new AbortController();
     const currentRequest = request;
     let timedOut = false;
     // A stalled endpoint must eventually let the reader retry.
-    requestTimer = setTimeout(() => { timedOut = true; currentRequest.abort(); }, 15000);
+    requestTimer = setTimeout(() => {
+      timedOut = true;
+      currentRequest.abort();
+    }, 15000);
     try {
       if (cfg.endpoint) {
         const response = await fetch(cfg.endpoint, {
@@ -215,11 +269,21 @@ export function initSignup(options = {}, intro) {
         if (response.status === 422) throw new Error(messages.rejected);
         if (response.status === 429) throw new Error(messages.limited);
         if (response.status !== 409) {
-          if (!response.ok || response.redirected || response.headers.get('content-type')?.split(';')[0].trim().toLowerCase() !== 'application/json') {
+          if (
+            !response.ok ||
+            response.redirected ||
+            response.headers.get('content-type')?.split(';')[0].trim().toLowerCase() !==
+              'application/json'
+          ) {
             throw new Error(messages.server);
           }
           const acknowledgement = await response.json();
-          if (!acknowledgement || typeof acknowledgement !== 'object' || Array.isArray(acknowledgement)) throw new Error(messages.server);
+          if (
+            !acknowledgement ||
+            typeof acknowledgement !== 'object' ||
+            Array.isArray(acknowledgement)
+          )
+            throw new Error(messages.server);
         }
       } else {
         await demoDelay(currentRequest.signal);
@@ -231,7 +295,11 @@ export function initSignup(options = {}, intro) {
       track(isDemo ? 'signup_demo_complete' : 'signup_submit_success');
     } catch (error) {
       if (!destroyed) {
-        const message = timedOut ? messages.timeout : [messages.rejected, messages.limited].includes(error.message) ? error.message : messages.server;
+        const message = timedOut
+          ? messages.timeout
+          : [messages.rejected, messages.limited].includes(error.message)
+            ? error.message
+            : messages.server;
         setError(message, message === messages.rejected);
         track('signup_submit_error', { message });
       }
@@ -245,11 +313,17 @@ export function initSignup(options = {}, intro) {
     if (force === '1') return false;
     if (force === '0' || !available || seenThisVisit()) return true;
     const state = storage();
-    return Boolean(state.subscribedAt || (state.dismissedAt && Date.now() - state.dismissedAt < cfg.suppressDays * 864e5));
+    return Boolean(
+      state.subscribedAt ||
+        (state.dismissedAt && Date.now() - state.dismissedAt < cfg.suppressDays * 864e5),
+    );
   }
 
   function tryAuto() {
-    if (destroyed || autoConsumed || suppressed()) { clearAuto(); return; }
+    if (destroyed || autoConsumed || suppressed()) {
+      clearAuto();
+      return;
+    }
     const distance = document.documentElement.scrollHeight - innerHeight;
     if (force === '1' || (distance > 0 && scrollY / distance >= cfg.scrollRatio)) open();
   }
@@ -265,7 +339,8 @@ export function initSignup(options = {}, intro) {
     }
   }
 
-  const listen = (element, type, handler) => element.addEventListener(type, handler, { signal: listeners.signal });
+  const listen = (element, type, handler) =>
+    element.addEventListener(type, handler, { signal: listeners.signal });
   successTitle.textContent = isDemo ? 'Demo complete' : 'Check your inbox';
   root.querySelector('[data-success-live]').hidden = isDemo;
   root.querySelector('[data-success-demo]').hidden = !isDemo;
@@ -283,24 +358,40 @@ export function initSignup(options = {}, intro) {
   });
   if (!cfg.standalone) {
     listen(document, 'keydown', onKey);
-    root.querySelectorAll('[data-sd-signup-close]').forEach(element => {
-      listen(element, 'click', () => close(element.classList.contains('sd-modal__scrim') ? 'scrim' : 'button'));
+    root.querySelectorAll('[data-sd-signup-close]').forEach((element) => {
+      listen(element, 'click', () =>
+        close(element.classList.contains('sd-modal__scrim') ? 'scrim' : 'button'),
+      );
     });
-    document.querySelectorAll('[data-sd-signup-open]').forEach(element => {
-      listen(element, 'click', event => {
-        if (event.defaultPrevented || event.button !== 0 || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    document.querySelectorAll('[data-sd-signup-open]').forEach((element) => {
+      listen(element, 'click', (event) => {
+        if (
+          event.defaultPrevented ||
+          event.button !== 0 ||
+          event.altKey ||
+          event.ctrlKey ||
+          event.metaKey ||
+          event.shiftKey
+        )
+          return;
         event.preventDefault();
         open(element);
       });
     });
-    listen(window, 'storage', event => {
+    listen(window, 'storage', (event) => {
       if (event.key === STORAGE_KEY || event.key === null) scheduleAuto();
     });
   }
   // Bind all handlers before making the form usable.
-  status.textContent = !available ? messages.unavailable : isDemo ? 'Demo sign-up. No email will be sent.' : '';
+  status.textContent = !available
+    ? messages.unavailable
+    : isDemo
+      ? 'Demo sign-up. No email will be sent.'
+      : '';
   status.hidden = available && !isDemo;
-  document.querySelectorAll('[data-signup-availability]').forEach(label => { label.hidden = available; });
+  document.querySelectorAll('[data-signup-availability]').forEach((label) => {
+    label.hidden = available;
+  });
   controls.disabled = !available;
   root.dataset.signupReady = 'true';
   if (!cfg.standalone && intro?.playing) {
@@ -320,18 +411,27 @@ export function initSignup(options = {}, intro) {
   }
 
   return {
-    open, close,
+    open,
+    close,
     reset() {
       if (loading || destroyed) return;
-      try { localStorage.removeItem(STORAGE_KEY); sessionStorage.removeItem(SESSION_KEY); } catch { /* Storage may be blocked. */ }
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        sessionStorage.removeItem(SESSION_KEY);
+      } catch {
+        /* Storage may be blocked. */
+      }
       resetForm();
       if (isOpen) input.focus({ preventScroll: true });
     },
     destroy() {
       destroyed = true;
-      clearAuto(); clearTimeout(closeTimer); clearTimeout(requestTimer);
+      clearAuto();
+      clearTimeout(closeTimer);
+      clearTimeout(requestTimer);
       cancelAnimationFrame(animationFrame);
-      request?.abort(); listeners.abort();
+      request?.abort();
+      listeners.abort();
       controls.disabled = true;
       delete root.dataset.signupReady;
       if (!cfg.standalone) {

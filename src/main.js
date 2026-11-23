@@ -1,7 +1,8 @@
 import { initSignup } from './signup-modal.js';
 
-document.querySelector('.sd-sectionnav')?.addEventListener('focusin', event => {
-  if (event.target.matches('a[href]')) event.target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+document.querySelector('.sd-sectionnav')?.addEventListener('focusin', (event) => {
+  if (event.target.matches('a[href]'))
+    event.target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 });
 
 const defaults = {
@@ -19,9 +20,18 @@ let signup = initSignup(defaults, intro);
 
 // Keep the handoff's public API available for QA and future integrations.
 window.SDSignup = {
-  init(options = {}) { signup.destroy(); signup = initSignup({ ...defaults, ...options }, intro); },
-  open(trigger) { signup.open(trigger); },
-  close(reason) { signup.close(reason); },
-  reset() { signup.reset(); },
+  init(options = {}) {
+    signup.destroy();
+    signup = initSignup({ ...defaults, ...options }, intro);
+  },
+  open(trigger) {
+    signup.open(trigger);
+  },
+  close(reason) {
+    signup.close(reason);
+  },
+  reset() {
+    signup.reset();
+  },
 };
 if (import.meta.hot) import.meta.hot.dispose(() => signup.destroy());
