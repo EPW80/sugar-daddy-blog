@@ -12,11 +12,14 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
-    "check": "npm test",
+    "check": "biome check . && npm test",
     "smoke:routes": "node scripts/smoke-routes.mjs",
-    "perf": "node scripts/performance.mjs"
+    "perf": "node scripts/performance.mjs",
+    "lint": "biome check .",
+    "format": "biome check --write ."
   },
   "devDependencies": {
+    "@biomejs/biome": "2.6.8",
     "@fontsource/barlow": "5.3.0",
     "@fontsource/barlow-condensed": "5.3.0",
     "@fontsource/playfair-display": "5.3.0",
