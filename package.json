@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=22.12.0"
+    "node": "^22.23.0 || ^24.22.0 || ^26.12.0"
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
@@ -12,18 +12,24 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
-    "check": "biome check . && npm test",
+    "check": "biome check . && npm run test:newsletter && npm test",
     "smoke:routes": "node scripts/smoke-routes.mjs",
     "perf": "node scripts/performance.mjs",
     "lint": "biome check .",
-    "format": "biome check --write ."
+    "format": "biome check --write .",
+    "test:newsletter": "node --test scripts/newsletter.test.mjs",
+    "cloudflare:build": "SD_CLOUDFLARE_BUILD=1 cf build",
+    "cloudflare:preview": "SD_CLOUDFLARE_BUILD=1 vite preview --host 127.0.0.1"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.8",
+    "@cloudflare/vite-plugin": "2.0.0-rc.3",
     "@fontsource/barlow": "5.3.0",
     "@fontsource/barlow-condensed": "5.3.0",
     "@fontsource/playfair-display": "5.3.0",
     "@playwright/test": "1.65.1",
+    "cf": "1.0.0-rc.2",
+    "miniflare": "5.20261119.0-beta",
     "vite": "8.3.8"
   }
 }

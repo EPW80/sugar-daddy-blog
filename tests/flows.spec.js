@@ -199,7 +199,7 @@ test('every enabled link and fragment resolves; catalog and footer work on mobil
   page,
 }) => {
   await page.setViewportSize({ width: 320, height: 720 });
-  for (const path of ['/', '/inner-circle/', '/404.html']) {
+  for (const path of ['/', '/inner-circle/', '/issues/01/', '/editorial-standards/', '/404.html']) {
     await page.goto(`${path}?sd_popup=0&sd_intro=0`);
     const links = await page
       .locator('a[href]')
@@ -216,7 +216,7 @@ test('every enabled link and fragment resolves; catalog and footer work on mobil
   }
   await page.goto('/?sd_popup=0&sd_intro=0');
   await expect(page.getByRole('navigation', { name: 'Sections' }).getByRole('link')).toHaveCount(5);
-  await expect(page.locator('.sd-card a')).toHaveCount(0);
+  await expect(page.locator('.sd-card a')).toHaveCount(3);
   await page.getByRole('link', { name: 'Explore sections' }).click();
   await expect(page.locator('#sd-catalog-title')).toBeInViewport();
   await page
@@ -312,4 +312,37 @@ test('missing pages return a real 404 with recovery; missing assets and API stay
   // Internal documentation is not part of the deployment.
   expect((await page.request.get('/README.md')).status()).toBe(404);
   expect((await page.request.get('/licenses/barlow-OFL.txt')).status()).toBe(200);
+});
+
+test('Issue No. 01 is readable at 320px and connects articles to the sample letter', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 720 });
+  await page.goto('/?sd_intro=0');
+  const issue = page.getByRole('link', { name: 'Read Issue No. 01' });
+  await issue.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Issue No. 01' })).toBeVisible();
+  const stories = page.locator('.sd-issue__story');
+  await expect(stories).toHaveCount(3);
+  for (const story of await stories.all()) {
+    const href = await story.getAttribute('href');
+    const response = await page.request.get(href);
+    expect(response.status()).toBe(200);
+    const html = await response.text();
+    expect(html).toContain('Sugar Daddy Editorial');
+    expect(html).toContain('Sources');
+    expect(html).toContain('Read next');
+  }
+  await stories.first().click();
+  await expect(page.getByRole('heading', { name: 'The Sunday wind-down' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+  await page.getByRole('link', { name: 'Sugar Daddy Editorial' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Editorial standards and corrections' }),
+  ).toBeVisible();
+  await page.goBack();
+  await page.getByRole('link', { name: 'Get the Sunday letter' }).click();
+  await expect(page.getByRole('heading', { name: 'A sample Sunday letter' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
 });

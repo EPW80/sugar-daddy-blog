@@ -97,8 +97,9 @@ VITE_SIGNUP_DEMO=false
 ```
 
 These are public, build-time values; restart or rebuild after changing them. Keep ESP
-credentials on the server. There is no API server in this project: route the configured
-URL to a real backend, and configure CORS there if it is on another origin.
+credentials on the server. The Cloudflare Worker implements this endpoint on the website
+origin. Use the Cloudflare preview to exercise the Worker and Vite's standalone preview
+to inspect the static site.
 
 The client sends:
 
@@ -111,6 +112,7 @@ Accept: application/json
 ```
 
 The source is `homepage-popup` or `inner-circle-page`. The page is the actual pathname.
+A filled `website` honeypot is rejected before Mailchimp is contacted.
 
 | Response | Client behavior |
 | --- | --- |
@@ -208,10 +210,9 @@ Vite development and preview already provide these recovery semantics. Run
 It checks both pages, the redirect and query string, the recovery page and stylesheet,
 and missing asset and API routes. The command exits nonzero if a check fails.
 
-The section menu links to the five informational catalog cards, and the hero links to
-the catalog heading. Articles, Search, Ask Daddy and the next issue are labeled Coming
-soon. The footer offers home/newsletter access and the handoff's informational disclaimer.
-Editorial content, About/Contact/legal pages, social links and photography remain separate work.
+The section menu links to the five catalog cards. The homepage also links to Issue No. 01
+and the three corresponding articles. The issue and articles are editorial previews pending
+approval. See the Cloudflare release checklist below.
 
 The nine specified Latin font faces are self-hosted from pinned Fontsource packages with
 `font-display: swap`. Both main pages preload Playfair 400 and Barlow 300; Vite rewrites
@@ -234,3 +235,84 @@ home baseline bypasses the intro. A separate first-visit run records
 
 These are local laboratory measurements, not production field metrics or physical-device
 validation. See `PERFORMANCE.md` for the recorded baseline and limitations.
+
+## Cloudflare Worker release
+
+Use Node 24.22 or newer within the Node 24 line. The Cloudflare CLI and Cloudflare Vite
+plugin are pinned to release candidates that support `cloudflare.config.ts`. The regular
+Vite build and preview still serve the static site from `dist/`. The Cloudflare build
+produces a Worker and static assets under `.cloudflare/output/v1/`.
+
+Verify the deployment artifact locally with signup disabled:
+
+```sh
+VITE_SIGNUP_ENDPOINT= VITE_SIGNUP_DEMO=false npm run cloudflare:build -- --mode staging
+npm run cloudflare:preview -- --mode staging --port 4182 --strictPort
+npm run smoke:routes -- http://127.0.0.1:4182 --cloudflare
+npm run test:newsletter
+```
+
+The Worker tests use isolated local D1 and mock provider requests. The local Cloudflare
+build uses a placeholder D1 ID when none is configured.
+
+### Staging and production
+
+1. Select the Sugar Daddy Cloudflare account. Create distinct D1 databases for
+   `sugar-daddy-staging` and `sugar-daddy`. Apply the committed schema to the intended
+   database with `npx cf d1 migrations apply "$SD_D1_DATABASE_ID"`. The Worker removes
+   expired counters daily at 04:00 UTC.
+2. Create separate Mailchimp audiences for staging and production. In each, configure
+   text fields with merge tags `SDSOURCE` and `SDCONSENT`, with no other required merge
+   fields. Set the audience sender and confirmation message, enable the final welcome
+   email, and test whether API-created pending contacts receive both messages at the
+   appropriate point. Use the real provider's unsubscribe link in the welcome email
+   and campaign. Use a reply inbox the editorial team monitors.
+3. For the target environment, export `SD_D1_DATABASE_ID`, `SD_MAILCHIMP_SERVER`
+   (data center prefix), `SD_MAILCHIMP_AUDIENCE_ID`, and `SD_SIGNUP_ENABLED=true`.
+   Set `SD_PRODUCTION_DOMAIN` only for production. Build with
+   `VITE_SIGNUP_ENDPOINT=/api/newsletter/subscribe VITE_SIGNUP_DEMO=false npm run cloudflare:build -- --mode staging`.
+   Replace `staging` with `production` for production. Build and deploy each mode
+   together because they share a local output directory.
+4. Provide `MAILCHIMP_API_KEY` and a randomly generated `SIGNUP_LIMIT_KEY` as Worker
+   secrets. Deploy the matching prebuilt version with
+   `npx cf deploy --prebuilt --mode staging --secrets-file /absolute/path/to/secrets.env`.
+   Use a separate gitignored or external secrets file for each environment. Leave the
+   production custom domain unattached until staging passes and the issue is approved.
+5. Run `npm run smoke:routes -- <staging-origin> --cloudflare --signup-enabled`.
+   Test one fresh inbox through the homepage popup and another through the standalone
+   form. Verify confirmation, the pending-to-subscribed transition, welcome delivery,
+   issue links, first-source attribution across a duplicate, and unsubscribe.
+6. After issue approval, replace the draft notices with actual publication dates,
+   add the qualified reviewer's credentials and review date wherever needed, and
+   remove the issue and article `noindex` tags. Verify the approved byline and editor
+   bio. Add the final domain to links in the welcome email and confirm its sender and
+   reply address. Repeat the route smoke on the production origin before scheduling
+   the first Sunday letter.
+
+To disable live signup, set the production Worker variable `SIGNUP_ENABLED` to
+`false` and deploy that configuration. That stops new submissions while leaving
+the issue reachable. If the form should visibly close as well, also rebuild the site
+with `VITE_SIGNUP_ENDPOINT=` and `VITE_SIGNUP_DEMO=false`. Review Worker outcomes
+and confirmed Mailchimp subscriptions by first source weekly for the first month.
+
+### Welcome email draft
+
+**Subject** Welcome to the Inner Circle
+
+You’re confirmed. Every Sunday we’ll send the training, sleep, and health stories
+we think are worth your time. Get started with Issue No. 01. Open with
+*The Sunday wind-down* if you have ten minutes tonight.
+
+See you Sunday,
+
+Sugar Daddy Editorial
+
+Link *Issue No. 01* to `/issues/01/` on the production domain and *The Sunday
+wind-down* to `/articles/sunday-wind-down/`. Add the Mailchimp unsubscribe link.
+
+### After launch
+
+Invite Ask Daddy questions by newsletter reply once the inbox is staffed. Get
+permission for the edited question before publishing, remove identifying details,
+and apply the same review standards as articles. Add the public archive after three
+issues and add client-side search at 15 published articles.

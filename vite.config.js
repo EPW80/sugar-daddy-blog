@@ -1,6 +1,7 @@
 import { readFile, stat } from 'node:fs/promises';
 import { extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { cloudflare } from '@cloudflare/vite-plugin';
 import { defineConfig } from 'vite';
 
 // Run after Vite's file handlers: missing assets and API requests stay real 404s.
@@ -76,16 +77,24 @@ function recoveryPage() {
   };
 }
 
+const pages = [
+  'index.html',
+  'inner-circle/index.html',
+  'issues/01/index.html',
+  'articles/sunday-wind-down/index.html',
+  'articles/training-on-a-busy-week/index.html',
+  'articles/questions-before-bloodwork/index.html',
+  'editorial-standards/index.html',
+  '404.html',
+];
+const clientBuild = {
+  rolldownOptions: {
+    input: pages.map((page) => fileURLToPath(new URL(page, import.meta.url))),
+  },
+};
+
 export default defineConfig({
   appType: 'mpa',
-  plugins: [recoveryPage()],
-  build: {
-    rolldownOptions: {
-      input: {
-        home: fileURLToPath(new URL('./index.html', import.meta.url)),
-        signup: fileURLToPath(new URL('./inner-circle/index.html', import.meta.url)),
-        notFound: fileURLToPath(new URL('./404.html', import.meta.url)),
-      },
-    },
-  },
+  plugins: [process.env.SD_CLOUDFLARE_BUILD === '1' ? cloudflare() : recoveryPage()],
+  environments: { client: { build: clientBuild } },
 });

@@ -46,6 +46,7 @@ export function initSignup(options = {}, intro) {
   const panel = root.querySelector('.sd-modal__panel');
   const form = root.querySelector('form');
   const input = form.querySelector('input[type="email"]');
+  const honeypot = form.elements.namedItem('website');
   const submit = form.querySelector('[type="submit"]');
   const errorEl = root.querySelector('.sd-form__error');
   const views = [...root.querySelectorAll('[data-view]')];
@@ -259,10 +260,12 @@ export function initSignup(options = {}, intro) {
     }, 15000);
     try {
       if (cfg.endpoint) {
+        const payload = { email, source: cfg.source, page: location.pathname };
+        if (honeypot?.value) payload.website = honeypot.value;
         const response = await fetch(cfg.endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          body: JSON.stringify({ email, source: cfg.source, page: location.pathname }),
+          body: JSON.stringify(payload),
           signal: request.signal,
           redirect: 'error',
         });
