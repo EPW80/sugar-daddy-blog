@@ -8,3 +8,7 @@ performance-artifacts/
 !.env.example
 *.local
 .DS_Store
+
+.cloudflare/
+.dev.vars
+.dev.vars.*

@@ -1012,3 +1012,10 @@ body.sd-scroll-lock {
     border-width: 1px 0;
   }
 }
+
+.sd-card__story {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-block-start: 0.4rem;
+}

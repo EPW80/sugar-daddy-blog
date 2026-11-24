@@ -4,12 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Inner Circle — Sugar Daddy</title>
-  <meta name="description" content="Training, bloodwork, sleep, mental health and grooming for men who take care of themselves.">
+  <meta name="description" content="A private Sunday letter from Sugar Daddy. Read a sample and sign up for Inner Circle.">
   <link rel="preload" href="/node_modules/@fontsource/playfair-display/files/playfair-display-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/node_modules/@fontsource/barlow/files/barlow-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/src/fonts.css">
   <link rel="stylesheet" href="/tokens/tokens.css">
   <link rel="stylesheet" href="/src/styles.css">
+  <link rel="stylesheet" href="/src/editorial.css">
 </head>
 <body data-page="signup">
   <a class="sd-skip" href="#sd-signup">Skip to sign-up</a>
@@ -31,13 +32,13 @@
           <h1 id="sd-signup-title" class="sd-modal__title">Join the <em class="sd-foil-text">Inner Circle</em></h1>
           <p id="sd-signup-desc" class="sd-modal__lede">One private letter every Sunday: the training, bloodwork, sleep and grooming notes actually worth your time.</p>
           <ul class="sd-perks">
-            <li>Members-only issues and long reads</li>
-            <li>First look at the Ask Daddy desk</li>
-            <li>No spam. Leave in one click.</li>
+            <li>A short note from the editors</li>
+            <li>Links to the week’s stories</li>
           </ul>
           <form class="sd-form" method="post" action="/inner-circle/" novalidate>
             <p class="sd-signup-status" data-signup-status role="status">Sign-up is still loading. If it doesn’t become available, reload this page.</p>
             <fieldset disabled>
+              <input type="text" name="website" autocomplete="off" tabindex="-1" hidden>
               <label for="sd-signup-email">Email address</label>
               <div class="sd-form__row">
                 <input id="sd-signup-email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" maxlength="254" placeholder="you@example.com" aria-describedby="sd-signup-error" required>
@@ -47,7 +48,7 @@
             <p id="sd-signup-error" class="sd-form__error" role="alert" aria-live="assertive"></p>
           </form>
           <div class="sd-modal__foot">
-            <span>Unsubscribe anytime.</span>
+            <span>By requesting entry, you agree to receive the Sunday letter. Unsubscribe anytime.</span>
             <a class="sd-textbtn" href="/">Not now</a>
           </div>
         </div>
@@ -60,6 +61,13 @@
         </div>
       </div>
     </div>
+    <section class="sd-sample-letter" aria-labelledby="sample-letter">
+      <h2 id="sample-letter">A sample Sunday letter</h2>
+      <p>Good morning. Before you fill the week, give yourself one thing you can actually keep. Put a training slot on the calendar, write down what you want to ask at your next appointment, or give yourself some quiet before bed tonight.</p>
+      <p>We put all three in Issue No. 01. Start with <a href="/articles/sunday-wind-down/">The Sunday wind-down</a>. A notebook and a place to put the phone will do.</p>
+      <p>See you next Sunday,<br>Sugar Daddy Editorial</p>
+      <a class="sd-link" href="/issues/01/">Read Issue No. 01</a>
+    </section>
   </main>
   <footer class="sd-footer sd-pin">
     <nav aria-label="Footer">
