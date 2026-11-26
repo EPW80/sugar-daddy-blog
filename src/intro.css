@@ -311,17 +311,11 @@
   letter-spacing: 0.26em;
   text-transform: uppercase;
   cursor: pointer;
-  opacity: 0;
-  animation:
-    sdi-in 0.4s ease 0.6s forwards,
-    sdi-fade 0.2s ease 3.25s forwards;
 }
 .sdi-skip:hover {
   border-color: var(--sd-color-champagne-200);
 }
 .sdi-skip:focus-visible {
-  opacity: 1;
-  animation: none;
   outline: 2px solid var(--sd-color-champagne-200);
   outline-offset: 3px;
 }

@@ -179,7 +179,7 @@ for (const status of [201, 409, 422, 429, 500]) {
     let payload;
     await page.route('**/api/newsletter/subscribe', async (route) => {
       payload = route.request().postDataJSON();
-      await route.fulfill({ status, contentType: 'application/json', body: '{}' });
+      await route.fulfill({ status, contentType: 'application/json', body: '{"ok":true}' });
     });
     await visit(page, '/?sd_popup=0');
     await page.evaluate(() => window.SDSignup.init({ endpoint: '/api/newsletter/subscribe' }));
@@ -338,6 +338,8 @@ for (const [name, contentType, body] of [
   ['JSON null', 'application/json', 'null'],
   ['JSON array', 'application/json', '[]'],
   ['JSON scalar', 'application/json', 'true'],
+  ['an arbitrary JSON object', 'application/json', '{}'],
+  ['a negative acknowledgement', 'application/json', '{"ok":false}'],
   ['empty response', 'application/json', ''],
 ]) {
   test(`${name} cannot confirm a subscription`, async ({ page }) => {
@@ -369,15 +371,28 @@ test('redirected API responses cannot confirm a subscription', async ({ page }) 
   expect(await page.evaluate(() => localStorage.getItem('sd_signup_v1'))).toBeNull();
 });
 
-test('a 409 response needs no body and remains indistinguishable from success', async ({
-  page,
-}) => {
+test('an unacknowledged conflict cannot confirm a subscription', async ({ page }) => {
   await page.route('**/api/subscribe', (route) => route.fulfill({ status: 409, body: '' }));
   await visit(page, '/?sd_popup=0', { endpoint: '/api/subscribe' });
   await trigger(page).click();
   await page.getByLabel('Email address').fill(email);
   await submit(page).click();
-  await expect(page.getByRole('heading', { name: 'Check your inbox' })).toBeFocused();
+  await expect(page.getByRole('alert')).toContainText('Something went wrong');
+  await expect(submit(page)).toBeEnabled();
+  await expect(page.getByLabel('Email address')).toHaveValue(email);
+  expect(await page.evaluate(() => localStorage.getItem('sd_signup_v1'))).toBeNull();
+});
+
+test('a rate-limited request shows the server retry interval', async ({ page }) => {
+  await page.route('**/api/subscribe', (route) =>
+    route.fulfill({ status: 429, headers: { 'Retry-After': '45' } }),
+  );
+  await visit(page, '/?sd_popup=0', { endpoint: '/api/subscribe' });
+  await trigger(page).click();
+  await page.getByLabel('Email address').fill(email);
+  await submit(page).click();
+  await expect(page.getByRole('alert')).toHaveText('Too many requests. Try again in 45 seconds.');
+  await expect(page.getByLabel('Email address')).toHaveValue(email);
 });
 
 test('a stalled request times out and a retry can succeed', async ({ page }) => {
@@ -392,7 +407,7 @@ test('a stalled request times out and a retry can succeed', async ({ page }) => 
     return route.fulfill({
       status: 201,
       contentType: 'application/json; charset=utf-8',
-      body: '{}',
+      body: '{"ok":true}',
     });
   });
   await visit(page, '/?sd_popup=0', { endpoint: '/api/subscribe' });

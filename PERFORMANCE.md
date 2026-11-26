@@ -64,3 +64,10 @@ port 4180, closes its own server, and leaves deployment `dist/` unchanged.
 Production hosting, network geography, physical iOS keyboards, screen-reader behavior
 and actual email delivery were not measured. Recheck performance on the chosen host
 and a physical device before treating this as a production baseline.
+
+## November 26 intro skip
+
+On the throttled mobile profile, the first-visit intro unlocked naturally at 4.94 seconds
+from navigation. Tapping **Skip intro** or pressing Escape unlocked the page in 311 ms from
+activation and moved focus to the main content in both cases. The benchmark records both
+skip paths alongside natural playback in `performance-artifacts/report.json`.

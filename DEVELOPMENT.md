@@ -21,6 +21,8 @@ For a design demo, copy `.env.example` to `.env.local`, set `VITE_SIGNUP_DEMO=tr
 and restart Vite. The page identifies demo mode; its completion screen confirms
 that no email was sent and no subscription was created. To use a real integration,
 set `VITE_SIGNUP_ENDPOINT` instead. A configured endpoint takes precedence over demo.
+For builds, export the signup settings explicitly in the shell. Local Vite env
+files can configure the dev server. Builds default to signup unavailable.
 
 ```sh
 npx playwright install chromium webkit  # once per environment
@@ -35,8 +37,8 @@ npm run smoke:routes -- http://127.0.0.1:4173  # checks a running preview or sta
 npm run perf                           # isolated mobile benchmark, traces and screenshots
 ```
 
-Tests always build with an empty endpoint and demo disabled, ignoring local signup
-configuration. Tests that need demo explicitly call `SDSignup.init({ demo: true })`;
+Tests build the editorial preview in a separate directory from `dist/` with an empty
+endpoint and demo disabled. Tests that need demo explicitly call `SDSignup.init({ demo: true })`;
 API tests mock the endpoint. The runner starts its own server on port 4173 and fails
 if it is occupied instead of reusing an unrelated or stale process. Traces and failure
 screenshots are in ignored `test-results/`; the HTML report is in `playwright-report/`.
@@ -111,16 +113,16 @@ Accept: application/json
 {"email":"reader@example.com","source":"homepage-popup","page":"/"}
 ```
 
-The source is `homepage-popup` or `inner-circle-page`. The page is the actual pathname.
+The source and page pairs are `homepage-popup` with `/` and `inner-circle-page`
+with `/inner-circle/`. The standalone HTML alias uses the same canonical page value.
 A filled `website` honeypot is rejected before Mailchimp is contacted.
 
 | Response | Client behavior |
 | --- | --- |
-| Nonredirected 2xx, `Content-Type: application/json`, valid JSON object (e.g. `{}`) | Confirmation view, subscription timestamp and success event |
-| 409, with or without a body | Same confirmation as success, preserving address privacy |
+| Nonredirected 2xx or 409, `Content-Type: application/json`, JSON object with `ok: true` | Confirmation view, popup suppression timestamp and success event |
 | 422 | Address rejection message; field marked invalid |
-| 429 | Wait-and-retry message; address preserved |
-| Redirect, HTML, empty/malformed JSON, JSON array/null/scalar, other failures | Generic retry message; address preserved |
+| 429 | Wait-and-retry message with the delay when `Retry-After` provides seconds. The address is preserved. |
+| Redirect, HTML, empty/malformed JSON, missing or false acknowledgement, other failures | Generic retry message. The address is preserved. |
 | No response within 15 seconds, including a stalled response body | Timeout message; form enabled for retry |
 
 An empty 204 response is not an acknowledgement under this contract. Align the eventual
@@ -210,9 +212,12 @@ Vite development and preview already provide these recovery semantics. Run
 It checks both pages, the redirect and query string, the recovery page and stylesheet,
 and missing asset and API routes. The command exits nonzero if a check fails.
 
-The section menu links to the five catalog cards. The homepage also links to Issue No. 01
-and the three corresponding articles. The issue and articles are editorial previews pending
-approval. See the Cloudflare release checklist below.
+The section menu links to the five catalog cards. Local development includes the Issue No. 01
+drafts. Builds default to `SD_EDITORIAL_MODE=hidden`, which omits the issue, the three articles,
+and their entry links. Export `SD_EDITORIAL_MODE=preview` for a staging build with draft notices
+and `noindex`. Pass `--editorial=preview` to its route smoke command. A `published` build
+requires approved source pages with the draft markers and `noindex` removed. Pass
+`--editorial=published` to smoke-test that artifact.
 
 The nine specified Latin font faces are self-hosted from pinned Fontsource packages with
 `font-display: swap`. Both main pages preload Playfair 400 and Barlow 300; Vite rewrites
@@ -231,7 +236,8 @@ download, 750Kbit/s upload and 4× CPU slowdown. `report.json` contains LCP, FCP
 font bytes and controller readiness; `*-trace.json` can be opened in Chrome's Performance
 panel. Screenshots capture home, standalone signup and the mobile modal. The
 home baseline bypasses the intro. A separate first-visit run records
-`introReadyMs` from navigation to overlay removal and scroll unlock.
+`introReadyMs` from navigation to overlay removal and scroll unlock. Two more runs record
+`introSkipToUnlockMs` and `introSkipFocusedMain` for a tap and Escape.
 
 These are local laboratory measurements, not production field metrics or physical-device
 validation. See `PERFORMANCE.md` for the recorded baseline and limitations.
@@ -246,14 +252,16 @@ produces a Worker and static assets under `.cloudflare/output/v1/`.
 Verify the deployment artifact locally with signup disabled:
 
 ```sh
-VITE_SIGNUP_ENDPOINT= VITE_SIGNUP_DEMO=false npm run cloudflare:build -- --mode staging
+SD_EDITORIAL_MODE=preview npm run cloudflare:build -- --mode staging
 npm run cloudflare:preview -- --mode staging --port 4182 --strictPort
-npm run smoke:routes -- http://127.0.0.1:4182 --cloudflare
+npm run smoke:routes -- http://127.0.0.1:4182 --cloudflare --editorial=preview
 npm run test:newsletter
 ```
 
 The Worker tests use isolated local D1 and mock provider requests. The local Cloudflare
-build uses a placeholder D1 ID when none is configured.
+build uses a placeholder D1 ID when none is configured and signup is disabled.
+Enabling signup requires a target D1 UUID, the same-origin newsletter endpoint,
+and demo mode off. Disabling signup requires an empty endpoint and demo mode off.
 
 ### Staging and production
 
@@ -270,29 +278,29 @@ build uses a placeholder D1 ID when none is configured.
 3. For the target environment, export `SD_D1_DATABASE_ID`, `SD_MAILCHIMP_SERVER`
    (data center prefix), `SD_MAILCHIMP_AUDIENCE_ID`, and `SD_SIGNUP_ENABLED=true`.
    Set `SD_PRODUCTION_DOMAIN` only for production. Build with
-   `VITE_SIGNUP_ENDPOINT=/api/newsletter/subscribe VITE_SIGNUP_DEMO=false npm run cloudflare:build -- --mode staging`.
-   Replace `staging` with `production` for production. Build and deploy each mode
+   `SD_EDITORIAL_MODE=preview VITE_SIGNUP_ENDPOINT=/api/newsletter/subscribe npm run cloudflare:build -- --mode staging`.
+   For production use `--mode production` and the approved `SD_EDITORIAL_MODE`. Build and deploy each mode
    together because they share a local output directory.
 4. Provide `MAILCHIMP_API_KEY` and a randomly generated `SIGNUP_LIMIT_KEY` as Worker
    secrets. Deploy the matching prebuilt version with
    `npx cf deploy --prebuilt --mode staging --secrets-file /absolute/path/to/secrets.env`.
    Use a separate gitignored or external secrets file for each environment. Leave the
    production custom domain unattached until staging passes and the issue is approved.
-5. Run `npm run smoke:routes -- <staging-origin> --cloudflare --signup-enabled`.
+5. Run `npm run smoke:routes -- <staging-origin> --cloudflare --signup-enabled --editorial=preview`.
    Test one fresh inbox through the homepage popup and another through the standalone
    form. Verify confirmation, the pending-to-subscribed transition, welcome delivery,
    issue links, first-source attribution across a duplicate, and unsubscribe.
 6. After issue approval, replace the draft notices with actual publication dates,
    add the qualified reviewer's credentials and review date wherever needed, and
-   remove the issue and article `noindex` tags. Verify the approved byline and editor
+   remove the issue and article `data-editorial-draft` markers and `noindex` tags before
+   building with `SD_EDITORIAL_MODE=published`. Verify the approved byline and editor
    bio. Add the final domain to links in the welcome email and confirm its sender and
    reply address. Repeat the route smoke on the production origin before scheduling
    the first Sunday letter.
 
-To disable live signup, set the production Worker variable `SIGNUP_ENABLED` to
-`false` and deploy that configuration. That stops new submissions while leaving
-the issue reachable. If the form should visibly close as well, also rebuild the site
-with `VITE_SIGNUP_ENDPOINT=` and `VITE_SIGNUP_DEMO=false`. Review Worker outcomes
+To disable live signup, rebuild and deploy with `SD_SIGNUP_ENABLED=false`,
+`VITE_SIGNUP_ENDPOINT=`, and `VITE_SIGNUP_DEMO=false`. Use the current editorial mode
+to keep published pages reachable. Review Worker outcomes
 and confirmed Mailchimp subscriptions by first source weekly for the first month.
 
 ### Welcome email draft

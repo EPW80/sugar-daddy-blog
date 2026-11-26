@@ -76,8 +76,8 @@ for (const path of ['/?sd_popup=0&sd_intro=0', '/inner-circle/']) {
       emails.push(route.request().postDataJSON().email);
       await route.fulfill(
         emails.length === 1
-          ? { status: 201, contentType: 'application/json', body: '{}' }
-          : { status: 409 },
+          ? { status: 201, contentType: 'application/json', body: '{"ok":true}' }
+          : { status: 409, contentType: 'application/json', body: '{"ok":true}' },
       );
     });
     await page.goto(path);
@@ -169,7 +169,7 @@ test('320px signup supports API success, focus return and reduced motion', async
   let payload;
   await page.route('**/api/newsletter/subscribe', async (route) => {
     payload = route.request().postDataJSON();
-    await route.fulfill({ status: 201, contentType: 'application/json', body: '{}' });
+    await route.fulfill({ status: 201, contentType: 'application/json', body: '{"ok":true}' });
   });
   await page.goto('/?sd_popup=0&sd_intro=0');
   await page.evaluate(() =>
