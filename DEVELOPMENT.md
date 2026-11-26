@@ -263,6 +263,20 @@ build uses a placeholder D1 ID when none is configured and signup is disabled.
 Enabling signup requires a target D1 UUID, the same-origin newsletter endpoint,
 and demo mode off. Disabling signup requires an empty endpoint and demo mode off.
 
+### Automatic staging deploys
+
+After lint and tests pass on a push to `main`, GitHub Actions deploys that revision
+to `sugar-daddy-staging` and runs route smoke checks against the live staging URL.
+The `cloudflare-staging` GitHub environment allows deployments from the `main` branch.
+Set `CLOUDFLARE_ACCOUNT_ID`, `SD_D1_DATABASE_ID`, and `SD_STAGING_URL` as environment
+variables and store the Cloudflare deployment token as the environment secret
+`CLOUDFLARE_API_TOKEN`.
+
+The pipeline uses the editorial preview build with newsletter signup disabled.
+Apply D1 migrations separately before deploying a change that depends on them.
+When staging Mailchimp settings are ready, update the pipeline to deploy the
+signup-enabled configuration and run the matching live smoke checks.
+
 ### Staging and production
 
 1. Select the Sugar Daddy Cloudflare account. Create distinct D1 databases for
