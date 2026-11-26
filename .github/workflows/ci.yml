@@ -7,7 +7,7 @@ on:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -67,3 +67,65 @@ jobs:
             test-results/
             playwright-report/
           retention-days: 14
+
+  deploy-staging:
+    name: Deploy Cloudflare staging
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: cloudflare-staging
+      url: ${{ vars.SD_STAGING_URL }}
+    env:
+      CF_SEND_TELEMETRY: "false"
+      SD_D1_DATABASE_ID: ${{ vars.SD_D1_DATABASE_ID }}
+      SD_STAGING_URL: ${{ vars.SD_STAGING_URL }}
+      SD_EDITORIAL_MODE: preview
+      SD_SIGNUP_ENABLED: "false"
+      VITE_SIGNUP_ENDPOINT: ""
+      VITE_SIGNUP_DEMO: "false"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Build the staging Worker
+        run: |
+          if [[ -z "$SD_D1_DATABASE_ID" || -z "$SD_STAGING_URL" ]]; then
+            echo "::error::Configure SD_D1_DATABASE_ID and SD_STAGING_URL in the cloudflare-staging environment."
+            exit 1
+          fi
+          npm run cloudflare:build -- --mode staging
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { readFileSync } from 'node:fs';
+          const worker = JSON.parse(readFileSync('.cloudflare/output/v1/workers/default/worker.config.json'));
+          assert.equal(worker.name, 'sugar-daddy-staging');
+          assert.deepEqual(worker.domains, []);
+          assert.equal(worker.workersDev, true);
+          assert.equal(worker.env.SIGNUP_LIMITS.id, process.env.SD_D1_DATABASE_ID);
+          assert.equal(worker.env.SIGNUP_ENABLED.value, 'false');
+          JS
+      - name: Deploy the tested revision
+        id: deploy
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          main_ref=$(git ls-remote --exit-code origin refs/heads/main)
+          if [[ "${main_ref%%$'\t'*}" != "$GITHUB_SHA" ]]; then
+            echo "Skipping staging deployment because main has advanced."
+            exit 0
+          fi
+          if [[ -z "$CLOUDFLARE_ACCOUNT_ID" || -z "$CLOUDFLARE_API_TOKEN" ]]; then
+            echo "::error::Configure CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN in the cloudflare-staging environment."
+            exit 1
+          fi
+          npx --no-install cf deploy --prebuilt --mode staging --no-provision --tag "$GITHUB_SHA"
+          echo "deployed=true" >> "$GITHUB_OUTPUT"
+      - name: Smoke-test the staging URL
+        if: steps.deploy.outputs.deployed == 'true'
+        run: npm run smoke:routes -- "$SD_STAGING_URL" --cloudflare --editorial=preview
