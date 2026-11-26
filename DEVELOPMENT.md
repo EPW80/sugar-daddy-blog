@@ -272,10 +272,13 @@ Set `CLOUDFLARE_ACCOUNT_ID`, `SD_D1_DATABASE_ID`, and `SD_STAGING_URL` as enviro
 variables and store the Cloudflare deployment token as the environment secret
 `CLOUDFLARE_API_TOKEN`.
 
-The pipeline uses the editorial preview build with newsletter signup disabled.
+The pipeline always builds the editorial preview. To enable staging signup, set
+`SD_MAILCHIMP_SERVER` and `SD_MAILCHIMP_AUDIENCE_ID` as staging environment variables
+and `MAILCHIMP_API_KEY` and `SIGNUP_LIMIT_KEY` as staging environment secrets. Set
+`SD_SIGNUP_ENABLED=true`, then run the CI workflow on `main` or push to `main`.
+The workflow uploads both Worker secrets and checks the live signup route.
+Set `SD_SIGNUP_ENABLED=false` and rerun CI on `main` to close staging signup.
 Apply D1 migrations separately before deploying a change that depends on them.
-When staging Mailchimp settings are ready, update the pipeline to deploy the
-signup-enabled configuration and run the matching live smoke checks.
 
 ### Staging and production
 

@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -70,7 +71,7 @@ jobs:
 
   deploy-staging:
     name: Deploy Cloudflare staging
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     needs: [lint, test]
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -82,8 +83,10 @@ jobs:
       SD_D1_DATABASE_ID: ${{ vars.SD_D1_DATABASE_ID }}
       SD_STAGING_URL: ${{ vars.SD_STAGING_URL }}
       SD_EDITORIAL_MODE: preview
-      SD_SIGNUP_ENABLED: "false"
-      VITE_SIGNUP_ENDPOINT: ""
+      SD_SIGNUP_ENABLED: ${{ vars.SD_SIGNUP_ENABLED || 'false' }}
+      SD_MAILCHIMP_SERVER: ${{ vars.SD_MAILCHIMP_SERVER }}
+      SD_MAILCHIMP_AUDIENCE_ID: ${{ vars.SD_MAILCHIMP_AUDIENCE_ID }}
+      VITE_SIGNUP_ENDPOINT: ${{ vars.SD_SIGNUP_ENABLED == 'true' && '/api/newsletter/subscribe' || '' }}
       VITE_SIGNUP_DEMO: "false"
     steps:
       - uses: actions/checkout@v7
@@ -98,6 +101,11 @@ jobs:
             echo "::error::Configure SD_D1_DATABASE_ID and SD_STAGING_URL in the cloudflare-staging environment."
             exit 1
           fi
+          if [[ "$SD_SIGNUP_ENABLED" == true ]] &&
+             [[ ! "$SD_MAILCHIMP_SERVER" =~ ^[a-z0-9]+$ || ! "$SD_MAILCHIMP_AUDIENCE_ID" =~ ^[a-zA-Z0-9]+$ ]]; then
+            echo "::error::Set valid SD_MAILCHIMP_SERVER and SD_MAILCHIMP_AUDIENCE_ID staging variables before enabling signup."
+            exit 1
+          fi
           npm run cloudflare:build -- --mode staging
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
@@ -107,13 +115,15 @@ jobs:
           assert.deepEqual(worker.domains, []);
           assert.equal(worker.workersDev, true);
           assert.equal(worker.env.SIGNUP_LIMITS.id, process.env.SD_D1_DATABASE_ID);
-          assert.equal(worker.env.SIGNUP_ENABLED.value, 'false');
+          assert.equal(worker.env.SIGNUP_ENABLED.value, process.env.SD_SIGNUP_ENABLED);
           JS
       - name: Deploy the tested revision
         id: deploy
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          MAILCHIMP_API_KEY: ${{ secrets.MAILCHIMP_API_KEY }}
+          SIGNUP_LIMIT_KEY: ${{ secrets.SIGNUP_LIMIT_KEY }}
         run: |
           main_ref=$(git ls-remote --exit-code origin refs/heads/main)
           if [[ "${main_ref%%$'\t'*}" != "$GITHUB_SHA" ]]; then
@@ -124,8 +134,28 @@ jobs:
             echo "::error::Configure CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN in the cloudflare-staging environment."
             exit 1
           fi
-          npx --no-install cf deploy --prebuilt --mode staging --no-provision --tag "$GITHUB_SHA"
+          deploy_args=(--prebuilt --mode staging --no-provision --tag "$GITHUB_SHA")
+          if [[ "$SD_SIGNUP_ENABLED" == true ]]; then
+            if [[ -z "$MAILCHIMP_API_KEY" || -z "$SIGNUP_LIMIT_KEY" ]]; then
+              echo "::error::Set MAILCHIMP_API_KEY and SIGNUP_LIMIT_KEY as staging environment secrets."
+              exit 1
+            fi
+            secrets_file=$(mktemp "$RUNNER_TEMP/signup-secrets.XXXXXXXX.json")
+            trap 'rm -- "$secrets_file"' EXIT
+            node --input-type=module -e '
+              import { writeFileSync } from "node:fs";
+              const { MAILCHIMP_API_KEY, SIGNUP_LIMIT_KEY } = process.env;
+              writeFileSync(process.argv[1], JSON.stringify({ MAILCHIMP_API_KEY, SIGNUP_LIMIT_KEY }));
+            ' "$secrets_file"
+            deploy_args+=(--secrets-file "$secrets_file")
+          fi
+          npx --no-install cf deploy "${deploy_args[@]}"
           echo "deployed=true" >> "$GITHUB_OUTPUT"
       - name: Smoke-test the staging URL
         if: steps.deploy.outputs.deployed == 'true'
-        run: npm run smoke:routes -- "$SD_STAGING_URL" --cloudflare --editorial=preview
+        run: |
+          smoke_args=("$SD_STAGING_URL" --cloudflare --editorial=preview)
+          if [[ "$SD_SIGNUP_ENABLED" == true ]]; then
+            smoke_args+=(--signup-enabled)
+          fi
+          npm run smoke:routes -- "${smoke_args[@]}"
