@@ -260,7 +260,11 @@ export function initSignup(options = {}, intro) {
     }, 15000);
     try {
       if (cfg.endpoint) {
-        const payload = { email, source: cfg.source, page: location.pathname };
+        const payload = {
+          email,
+          source: cfg.source,
+          page: cfg.standalone ? '/inner-circle/' : '/',
+        };
         if (honeypot?.value) payload.website = honeypot.value;
         const response = await fetch(cfg.endpoint, {
           method: 'POST',
@@ -270,24 +274,26 @@ export function initSignup(options = {}, intro) {
           redirect: 'error',
         });
         if (response.status === 422) throw new Error(messages.rejected);
-        if (response.status === 429) throw new Error(messages.limited);
-        if (response.status !== 409) {
-          if (
-            !response.ok ||
-            response.redirected ||
-            response.headers.get('content-type')?.split(';')[0].trim().toLowerCase() !==
-              'application/json'
-          ) {
-            throw new Error(messages.server);
-          }
-          const acknowledgement = await response.json();
-          if (
-            !acknowledgement ||
-            typeof acknowledgement !== 'object' ||
-            Array.isArray(acknowledgement)
-          )
-            throw new Error(messages.server);
+        if (response.status === 429) {
+          const retryAfter = response.headers.get('Retry-After')?.trim();
+          const seconds = Number(retryAfter);
+          const message =
+            /^\d+$/.test(retryAfter ?? '') && Number.isSafeInteger(seconds)
+              ? `Too many requests. Try again in ${seconds} ${seconds === 1 ? 'second' : 'seconds'}.`
+              : messages.limited;
+          setError(message);
+          track('signup_submit_error', { message: messages.limited });
+          return;
         }
+        if (
+          (!response.ok && response.status !== 409) ||
+          response.redirected ||
+          response.headers.get('content-type')?.split(';')[0].trim().toLowerCase() !==
+            'application/json'
+        )
+          throw new Error(messages.server);
+        const acknowledgement = await response.json();
+        if (acknowledgement?.ok !== true) throw new Error(messages.server);
       } else {
         await demoDelay(currentRequest.signal);
       }
@@ -300,7 +306,7 @@ export function initSignup(options = {}, intro) {
       if (!destroyed) {
         const message = timedOut
           ? messages.timeout
-          : [messages.rejected, messages.limited].includes(error.message)
+          : error.message === messages.rejected
             ? error.message
             : messages.server;
         setError(message, message === messages.rejected);

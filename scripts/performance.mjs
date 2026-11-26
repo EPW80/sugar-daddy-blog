@@ -31,10 +31,12 @@ try {
     },
     pages: [],
   };
-  for (const [name, path] of [
+  for (const [name, path, skipMethod] of [
     ['home', '/?sd_intro=0'],
     ['signup', '/inner-circle/'],
     ['intro', '/'],
+    ['intro-tap', '/', 'tap'],
+    ['intro-escape', '/', 'escape'],
   ]) {
     const context = await browser.newContext({
       viewport: { width: 390, height: 844 },
@@ -62,11 +64,33 @@ try {
         signupReadyMs: null,
         openToFocusMs: null,
         introReadyMs: null,
+        introSkipToUnlockMs: null,
+        introSkipFocusedMain: null,
       };
+      let skipAt;
+      document.addEventListener(
+        'click',
+        (event) => {
+          if (event.target.closest('.sdi-skip')) skipAt ??= performance.now();
+        },
+        true,
+      );
+      document.addEventListener(
+        'keydown',
+        (event) => {
+          if (event.key === 'Escape' && window.SDIntro?.playing) skipAt ??= performance.now();
+        },
+        true,
+      );
       document.addEventListener(
         'sd:intro-done',
         () => {
-          window.sdPerformance.introReadyMs = performance.now();
+          const now = performance.now();
+          window.sdPerformance.introReadyMs = now;
+          if (skipAt != null) {
+            window.sdPerformance.introSkipToUnlockMs = now - skipAt;
+            window.sdPerformance.introSkipFocusedMain = document.activeElement?.id === 'main';
+          }
         },
         { once: true },
       );
@@ -106,8 +130,14 @@ try {
     });
     const url = new URL(path, server.resolvedUrls.local[0]);
     url.searchParams.set('sd_popup', '0');
-    await page.goto(url.href);
-    if (name === 'intro') await page.evaluate(() => window.SDIntro.done);
+    await page.goto(url.href, { waitUntil: skipMethod ? 'domcontentloaded' : 'load' });
+    if (skipMethod) {
+      const skipButton = page.getByRole('button', { name: 'Skip intro' });
+      await skipButton.waitFor();
+      if (skipMethod === 'tap') await skipButton.tap();
+      else await page.keyboard.press('Escape');
+    }
+    if (name === 'intro' || skipMethod) await page.evaluate(() => window.SDIntro.done);
     await page.evaluate(() => document.fonts.ready);
     // Allow late font swaps and layout shifts to settle before interaction ends LCP observation.
     await page.waitForTimeout(2500);
@@ -140,6 +170,12 @@ try {
     });
     if (name === 'intro') {
       measurement.introReadyMs = await page.evaluate(() => window.sdPerformance.introReadyMs);
+    }
+    if (skipMethod) {
+      const { introSkipToUnlockMs, introSkipFocusedMain } = await page.evaluate(
+        () => window.sdPerformance,
+      );
+      Object.assign(measurement, { introSkipToUnlockMs, introSkipFocusedMain });
     }
     // Capture complete artwork after taking viewport metrics, without changing the baseline.
     await page.evaluate(async () => {

@@ -74,6 +74,20 @@ test('reduced motion takes precedence over replay', async ({ page }) => {
   ).toEqual([false, null]);
 });
 
+test.describe('touch intro skip', () => {
+  test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
+
+  test('the first frame has a visible, tappable skip button', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await expect(overlay(page)).toBeVisible();
+    await expect(skipButton(page)).toHaveCSS('opacity', '1');
+    expect(await skipButton(page).evaluate((button) => button.getAnimations().length)).toBe(0);
+    await skipButton(page).tap();
+    await expect(overlay(page)).toHaveCount(0);
+    await expect(page.locator('#main')).toBeFocused();
+  });
+});
+
 for (const key of ['Enter', 'Space', 'Escape']) {
   test(`skips with ${key} and focuses the main content`, async ({ page }) => {
     await page.goto('/');

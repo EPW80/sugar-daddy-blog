@@ -4,9 +4,13 @@ async function main() {
   const baseUrl = URL.parse(process.argv[2] ?? '');
   const cloudflare = process.argv.includes('--cloudflare');
   const signupEnabled = process.argv.includes('--signup-enabled');
+  const editorial =
+    process.argv.find((argument) => argument.startsWith('--editorial='))?.split('=')[1] ?? 'hidden';
+  if (!['hidden', 'preview', 'published'].includes(editorial))
+    throw new Error('Use --editorial=hidden, --editorial=preview, or --editorial=published.');
   if (!baseUrl || !['http:', 'https:'].includes(baseUrl.protocol)) {
     throw new Error(
-      'Usage: npm run smoke:routes -- <http(s)://host> [--cloudflare] [--signup-enabled]',
+      'Usage: npm run smoke:routes -- <http(s)://host> [--cloudflare] [--signup-enabled] [--editorial=hidden|preview|published]',
     );
   }
 
@@ -25,19 +29,33 @@ async function main() {
   }
 
   const home = await expectStatus('/', 200);
-  assert.match(await home.text(), /A little more discipline/, 'Homepage content is missing');
+  const homeHtml = await home.text();
+  assert.match(homeHtml, /A little more discipline/, 'Homepage content is missing');
   const signup = await expectStatus('/inner-circle/', 200);
-  assert.match(await signup.text(), /id="sd-signup-email"/, 'Inner Circle form is missing');
+  const signupHtml = await signup.text();
+  assert.match(signupHtml, /id="sd-signup-email"/, 'Inner Circle form is missing');
+  const standards = await expectStatus('/editorial-standards/', 200);
+  const standardsHtml = await standards.text();
+  assert.match(standardsHtml, /<h1>Editorial standards and corrections<\/h1>/);
 
   for (const [path, title] of [
     ['/issues/01/', 'Issue No. 01'],
     ['/articles/sunday-wind-down/', 'The Sunday wind-down'],
     ['/articles/training-on-a-busy-week/', 'Training on a busy week'],
     ['/articles/questions-before-bloodwork/', 'What to ask before bloodwork'],
-    ['/editorial-standards/', 'Editorial standards and corrections'],
   ]) {
-    const page = await expectStatus(path, 200);
-    assert.ok((await page.text()).includes(`<h1>${title}</h1>`), `${path} heading is missing`);
+    const page = await expectStatus(path, editorial === 'hidden' ? 404 : 200);
+    const html = await page.text();
+    if (editorial === 'hidden') assert.match(html, /class="sd-not-found\b/, path);
+    else {
+      assert.ok(html.includes(`<h1>${title}</h1>`), `${path} heading is missing`);
+      const noindex = /<meta\b[^>]*\bnoindex\b/i.test(html);
+      assert.equal(noindex, editorial === 'preview', `${path} robots status`);
+    }
+  }
+  for (const html of [homeHtml, signupHtml, standardsHtml]) {
+    assert.equal(/href="\/issues\/01\//.test(html), editorial !== 'hidden');
+    if (editorial === 'hidden') assert.doesNotMatch(html, /href="\/articles\//);
   }
 
   const redirect = await request('/inner-circle?from=review');

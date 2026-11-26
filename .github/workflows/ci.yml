@@ -41,7 +41,22 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:newsletter
-      - run: npm run cloudflare:build -- --mode staging
+      - name: Smoke test built Worker in hidden and editorial preview modes
+        shell: bash
+        run: |
+          for editorial in preview hidden; do
+            SD_EDITORIAL_MODE="$editorial" npm run cloudflare:build -- --mode staging
+            SD_CLOUDFLARE_BUILD=1 node node_modules/vite/bin/vite.js preview \
+              --host 127.0.0.1 --mode staging --port 4182 --strictPort &
+            preview_pid=$!
+            trap 'kill "$preview_pid"' EXIT
+            curl --fail --silent --show-error --retry 20 --retry-connrefused \
+              --retry-delay 1 --max-time 2 --output /dev/null http://127.0.0.1:4182/
+            npm run smoke:routes -- http://127.0.0.1:4182 --cloudflare --editorial="$editorial"
+            kill "$preview_pid"
+            wait "$preview_pid" || true
+            trap - EXIT
+          done
       - run: npm test
       - name: Upload test artifacts
         if: ${{ !cancelled() }}
